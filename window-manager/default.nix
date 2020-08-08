@@ -2,8 +2,11 @@
 
 pkgs.stdenv.mkDerivation {
   name = "dwm";
-  buildInputs = [
-    (import ./shell.nix {}).buildInputs
+  buildInputs = with pkgs; [
+    clang
+    xorg.libXft
+    xorg.libX11
+    xorg.libXinerama
   ];
   prePatch = ''
     sed -i "s@/usr/local@$out@" config.mk
