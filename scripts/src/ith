@@ -1,0 +1,17 @@
+#!/bin/sh
+THEME_FILE="$HOME"/.config/current_theme
+CURRENT_THEME=""
+
+if [ -f "$THEME_FILE" ]; then
+  CURRENT_THEME="$(cat "$HOME"/.config/current_theme)";
+fi
+
+if [ "$CURRENT_THEME" = "dark" ]; then
+  wal -l --theme base16-one
+  printf 'light' > "$THEME_FILE";
+else
+  wal --theme base16-google
+  printf 'dark' > "$THEME_FILE";
+fi
+
+xsetroot -name "fsignal:1";

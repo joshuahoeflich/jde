@@ -1,0 +1,4 @@
+#!/bin/sh
+dotadd
+dot commit
+dot push origin master

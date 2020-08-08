@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+while IFS="" read -r p || [ -n "$p" ]
+do
+    case "$p" in
+        \#*)
+	    ;;
+         *)
+	    p="${HOME}/${p#"~/"}" # Replace ~ with the actual path
+	    dot add "$p"
+    esac
+done < ~/.local/dotfiles.dots
