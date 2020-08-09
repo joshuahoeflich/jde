@@ -1,24 +1,24 @@
 extern crate tokio;
 
-// use std::process;
+use std::process;
 // use std::sync::atomic::AtomicBool;
 // use std::sync::Arc;
-// use telebar_server::cli::parse_cli_args;
-// use telebar_server::errors::error_message;
-// use telebar_server::server::{create_server, suggest_server_fix};
-// use telebar_server::signals::register_signal_handler;
+use telebar::cli::parse_cli_args;
+use telebar::errors::error_message;
+// use telebar::server::{create_server, suggest_server_fix};
+// use telebar::signals::register_signal_handler;
 
 #[tokio::main]
 async fn main() {
-    println!("Write me!");
-    // let cli_args = parse_cli_args().unwrap_or_else(|_| {
-    //     error_message(
-    //         "CONFIG FILE NOT FOUND",
-    //         "Please pass a Config.toml or create a config file in ~/.config/telebar/Config.toml"
-    //             .to_string(),
-    //     );
-    //     process::exit(1);
-    // });
+    let _cli_args = parse_cli_args().unwrap_or_else(|_| {
+        error_message(
+            "CONFIG FILE NOT FOUND",
+            "Please pass a Config.toml or create a config file in ~/.config/telebar/Config.toml"
+                .to_string(),
+        );
+        process::exit(1);
+    });
+    // println!("{}", cli_args.config);
     // let socket_addr = get_socket_addr(&cli_args.server_id).unwrap_or_else(|_| {
     //     error_message(
     //         "XDG_RUNTIME_NOT_FOUND",
