@@ -1,6 +1,5 @@
 use super::errors::error_message;
 use std::fs;
-use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use tokio::io::AsyncReadExt;
@@ -31,14 +30,6 @@ async fn handle_stream(stream: &mut tokio::net::UnixStream) {
         Ok(string) => println!("YOU SENT {}", string),
         Err(e) => eprintln!("{:?}", e),
     };
-}
-
-pub fn get_socket_addr(server_id: &str) -> Result<String, std::env::VarError> {
-    let xdg_runtime_dir = std::env::var("XDG_RUNTIME_DIR")?;
-    let mut socket_buffer = PathBuf::new();
-    socket_buffer.push(xdg_runtime_dir);
-    socket_buffer.push(format!("{}_telebar_socket", server_id));
-    Ok(socket_buffer.to_string_lossy().into_owned())
 }
 
 pub enum ServerError {

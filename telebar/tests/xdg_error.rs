@@ -1,9 +1,9 @@
 use std::env;
-use telebar::server::get_socket_addr;
+use telebar::cli::{get_socket_addr, CliParseError};
 
 #[test]
 fn my_test() {
     env::remove_var("XDG_RUNTIME_DIR");
-    let socket_err = get_socket_addr("3").unwrap_err();
-    assert_eq!(socket_err, env::VarError::NotPresent);
+    let socket_err = get_socket_addr("3".to_string()).unwrap_err();
+    assert_eq!(socket_err, CliParseError::XdgRuntime);
 }
