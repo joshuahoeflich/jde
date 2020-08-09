@@ -4,10 +4,7 @@
 
 printf "Testing telebar-server cleanup...\n"
 
-if [ ! -f "$TELEBAR_SERVER" ]; then
-    mkdir -p "$TEST_BUILD_PATH";
-    cargo build --release --target-dir "$TEST_BUILD_PATH";
-fi
+cargo build --release --target-dir "$TEST_BUILD_PATH";
 
 $TELEBAR_SERVER --id 5 &
 SERVER_PID=$!
