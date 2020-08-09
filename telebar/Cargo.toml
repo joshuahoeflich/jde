@@ -1,0 +1,12 @@
+[package]
+name = "telebar"
+version = "0.1.0"
+authors = ["Joshua Hoeflich <josh@joshuahoeflich.com>"]
+edition = "2018"
+
+[dependencies]
+tokio = { version = "0.2", features = ["macros", "net", "uds", "stream", "io-util"] }
+clap  = "2.33"
+ctrlc = { version = "3.1.6", features = ["termination"]}
+colored = "2.0"
+toml = "0.5.6"
