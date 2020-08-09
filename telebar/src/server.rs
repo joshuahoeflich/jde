@@ -1,3 +1,4 @@
+use super::cli::InputData;
 use super::errors::error_message;
 use std::fs;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -5,8 +6,11 @@ use std::sync::Arc;
 use tokio::io::AsyncReadExt;
 use tokio::stream::StreamExt;
 
-pub async fn create_server(socket_addr: &str, running: Arc<AtomicBool>) -> Result<(), ServerError> {
-    let mut listener = tokio::net::UnixListener::bind(socket_addr)
+pub async fn create_server(
+    input_data: &mut InputData,
+    running: Arc<AtomicBool>,
+) -> Result<(), ServerError> {
+    let mut listener = tokio::net::UnixListener::bind(&input_data.socket_addr)
         .map_err(|_| ServerError::SocketConnectionError)?;
 
     while let Some(stream) = listener.next().await {
@@ -19,7 +23,7 @@ pub async fn create_server(socket_addr: &str, running: Arc<AtomicBool>) -> Resul
             Err(e) => eprintln!("ERR {:?}", e),
         }
     }
-    fs::remove_file(socket_addr).map_err(|_| ServerError::RemoveSocketFileError)?;
+    fs::remove_file(&input_data.socket_addr).map_err(|_| ServerError::RemoveSocketFileError)?;
     Ok(())
 }
 

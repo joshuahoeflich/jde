@@ -1,34 +1,13 @@
 #!/bin/sh
-# Killing processes from within `Cargo test` is somewhat flakey, so we do it
-# from within a shell-script instead
 
-TELEBAR_SERVER="$PWD"/target/release/telebar
-SOCKET_PATH=$XDG_RUNTIME_DIR/5_telebar_socket;
-
-cleanup() {
-    rm -rf "$SOCKET_PATH";
-}
-
-# $1 == condition to wait for
-# $2 == failure message
-wait_for(){
-    COUNTER=0;
-    while eval "$1"; do
-        sleep 0.1;
-        if [ $COUNTER -gt 3 ]; then
-            printf "%s\n" "$2";
-            cleanup;
-            exit 1
-        else
-            COUNTER=$((COUNTER+1));
-        fi
-    done
-    COUNTER=0;
-}
-
-cleanup;
+. ./config.sh
 
 printf "Testing telebar-server cleanup...\n"
+
+if [ ! -f "$TELEBAR_SERVER" ]; then
+    mkdir -p "$TEST_BUILD_PATH";
+    cargo build --release --target-dir "$TEST_BUILD_PATH";
+fi
 
 if [ ! -f "$TELEBAR_SERVER" ]; then
   printf "FAILURE: Could not find server binary.\n";

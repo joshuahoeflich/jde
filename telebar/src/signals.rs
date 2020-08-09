@@ -1,3 +1,4 @@
+use super::errors::error_message;
 use ctrlc::Error;
 use std::os;
 use std::process;
@@ -16,4 +17,11 @@ pub fn register_signal_handler(socket_addr: &str, running: &Arc<AtomicBool>) -> 
             Err(_) => process::exit(1),
         }
     })
+}
+
+pub fn report_register_error(_: Error) {
+    error_message(
+        "FAILURE TO REGISTER SIGNAL HANDLER",
+        "Telebar cannot exit cleanly, so we are aborting now.".to_string(),
+    );
 }

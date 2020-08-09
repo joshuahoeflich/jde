@@ -37,7 +37,7 @@ $XDG_RUNTIME_DIR/${id}_telebar_socket.",
                     "Config file for the status bar. To find this file, we search three places:
 
 1. The path passed right here,
-2. The environment variable $TELEBAR_CONFIG_FILE,
+2. The environment variable $TELEBAR_ENV_VAR_FILE,
 3. ~/.config/telebar/Config.toml
 
 If we can't find it in any of this locations, we exit with an error code.",
@@ -49,10 +49,10 @@ If we can't find it in any of this locations, we exit with an error code.",
 pub fn get_input_data(server_id: String, config_path: Option<&str>) -> CliResult {
     let xdg_runtime = env::var("XDG_RUNTIME_DIR").map_err(|_| CliParseError::XdgRuntime)?;
     let home = env::var("HOME").map_err(|_| CliParseError::Home)?;
-    let telebar_config = env::var("TELEBAR_CONFIG_FILE");
+    let telebar_env_var = env::var("TELEBAR_ENV_VAR_FILE");
     Ok(InputData {
         socket_addr: get_socket_addr(server_id, xdg_runtime),
-        config: Config::new(config_path, home, telebar_config)?,
+        config: Config::new(config_path, home, telebar_env_var)?,
     })
 }
 
@@ -72,10 +72,10 @@ type BarResult = Result<String, env::VarError>;
 impl Config {
     fn new(
         maybe_cli_str: Option<&str>,
-        home: String,
-        telebar_config: BarResult,
+        home_env_var: String,
+        telebar_env_var: BarResult,
     ) -> Result<Config, CliParseError> {
-        let config_toml = get_config_toml(maybe_cli_str, home, telebar_config)?;
+        let config_toml = get_config_toml(maybe_cli_str, telebar_env_var, home_env_var)?;
         let config_table = config_toml
             .as_table()
             .ok_or_else(|| CliParseError::TomlParseError)?;
@@ -109,25 +109,29 @@ fn get_socket_addr(socket_addr: String, xdg_runtime: String) -> String {
 
 fn get_config_toml(
     maybe_cli_str: Option<&str>,
-    home: String,
-    telebar_config: BarResult,
+    telebar_env_var: BarResult,
+    home_env_var: String,
 ) -> Result<toml::Value, CliParseError> {
     toml::from_str(
-        &std::fs::read_to_string(get_config_path(maybe_cli_str, home, telebar_config)?)
-            .map_err(|_| CliParseError::ConfigFile)?,
+        &std::fs::read_to_string(get_config_path(
+            maybe_cli_str,
+            telebar_env_var,
+            home_env_var,
+        )?)
+        .map_err(|_| CliParseError::ConfigFile)?,
     )
     .map_err(|_| CliParseError::TomlParseError)
 }
 
 fn get_config_path(
     maybe_cli_str: Option<&str>,
-    home: String,
-    telebar_config: BarResult,
+    telebar_env_var: BarResult,
+    home_env_var: String,
 ) -> Result<PathBuf, CliParseError> {
     maybe_cli_str.map_or_else(
         || {
-            telebar_config.map(PathBuf::from).or_else(|_| {
-                let mut home_path = PathBuf::from(home);
+            telebar_env_var.map(PathBuf::from).or_else(|_| {
+                let mut home_path = PathBuf::from(home_env_var);
                 home_path.push(".config");
                 home_path.push("telebar");
                 home_path.push("Config.toml");
@@ -136,6 +140,53 @@ fn get_config_path(
         },
         |path| Ok(PathBuf::from(path)),
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{get_config_path, get_socket_addr};
+    use std::path::PathBuf;
+
+    #[test]
+    fn socket_addr() {
+        assert_eq!(
+            get_socket_addr("1".to_string(), "xdg_runtime".to_string()),
+            "xdg_runtime/1_telebar_socket"
+        );
+    }
+
+    #[test]
+    fn config_path_specified() {
+        let mut cli_path = PathBuf::new();
+        cli_path.push(file!());
+        cli_path.push("Config.toml");
+        let config_path = get_config_path(
+            Some(cli_path.to_str().unwrap()),
+            Ok("config.toml".to_string()),
+            "home".to_string(),
+        )
+        .unwrap();
+        assert_eq!(config_path, cli_path);
+    }
+
+    #[test]
+    fn config_path_env_var() {
+        let config_env_var = PathBuf::from("/path/to/config.toml");
+        let config_path = get_config_path(
+            None,
+            Ok("/path/to/config.toml".to_string()),
+            "home".to_string(),
+        )
+        .unwrap();
+        assert_eq!(config_path, config_env_var);
+    }
+
+    #[test]
+    fn config_path_default() {
+        let config_path =
+            get_config_path(None, Err(std::env::VarError::NotPresent), "~".to_string()).unwrap();
+        assert_eq!(config_path, PathBuf::from("~/.config/telebar/Config.toml"));
+    }
 }
 
 #[derive(Debug, PartialEq)]
