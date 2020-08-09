@@ -1,35 +1,16 @@
 use super::errors::error_message;
 use clap::{App, Arg, ArgMatches};
+use std::collections::HashMap;
 use std::env;
 use std::path::PathBuf;
 
-pub fn parse_cli_args() -> Result<InputData, CliParseError> {
+type CliResult = Result<InputData, CliParseError>;
+
+pub fn parse_cli_args() -> CliResult {
     let matches = get_app_matches();
-
-    let xdg_runtime = env::var("XDG_RUNTIME_DIR").map_err(|_| CliParseError::XdgRuntime)?;
-    let socket_addr = get_socket_addr(
-        matches.value_of("id").unwrap_or("0").to_owned(),
-        xdg_runtime,
-    );
-
-    let home = env::var("HOME").map_err(|_| CliParseError::Home)?;
-    let telebar_config = env::var("TELEBAR_CONFIG_FILE");
-    let config = get_config(matches.value_of("config"), home, telebar_config)?;
-
-    Ok(InputData {
-        socket_addr,
-        config,
-    })
-}
-
-pub struct InputData {
-    pub socket_addr: String,
-    pub config: Config,
-}
-
-pub struct Config {
-    separator: String,
-    routes: Vec<String>,
+    let server_id = matches.value_of("id").unwrap_or("0").to_owned();
+    let config_path = matches.value_of("config");
+    get_input_data(server_id, config_path)
 }
 
 fn get_app_matches<'a>() -> ArgMatches<'a> {
@@ -42,16 +23,81 @@ fn get_app_matches<'a>() -> ArgMatches<'a> {
                 .short("i")
                 .long("id")
                 .takes_value(true)
-                .help("Id of the server you want to start. Defaults to 0."),
+                .help(
+                    "ID of the server you want to start. Defaults to 0. You can find the socket at
+$XDG_RUNTIME_DIR/${id}_telebar_socket.",
+                ),
         )
         .arg(
             Arg::with_name("config")
                 .short("c")
                 .long("config")
                 .takes_value(true)
-                .help("Config file for the status bar. Defaults to the path passed here, $TELEBAR_CONFIG_FILE, or ~/.config/telebar.Config.toml."),
+                .help(
+                    "Config file for the status bar. To find this file, we search three places:
+
+1. The path passed right here,
+2. The environment variable $TELEBAR_CONFIG_FILE,
+3. ~/.config/telebar/Config.toml
+
+If we can't find it in any of this locations, we exit with an error code.",
+                ),
         )
         .get_matches()
+}
+
+pub fn get_input_data(server_id: String, config_path: Option<&str>) -> CliResult {
+    let xdg_runtime = env::var("XDG_RUNTIME_DIR").map_err(|_| CliParseError::XdgRuntime)?;
+    let home = env::var("HOME").map_err(|_| CliParseError::Home)?;
+    let telebar_config = env::var("TELEBAR_CONFIG_FILE");
+    Ok(InputData {
+        socket_addr: get_socket_addr(server_id, xdg_runtime),
+        config: Config::new(config_path, home, telebar_config)?,
+    })
+}
+
+pub struct InputData {
+    pub socket_addr: String,
+    pub config: Config,
+}
+
+pub struct Config {
+    pub separator: String,
+    pub routes: Vec<String>,
+    pub values: HashMap<String, String>,
+}
+
+type BarResult = Result<String, env::VarError>;
+
+impl Config {
+    fn new(
+        maybe_cli_str: Option<&str>,
+        home: String,
+        telebar_config: BarResult,
+    ) -> Result<Config, CliParseError> {
+        let config_toml = get_config_toml(maybe_cli_str, home, telebar_config)?;
+        let config_table = config_toml
+            .as_table()
+            .ok_or_else(|| CliParseError::TomlParseError)?;
+
+        let mut routes = vec![];
+        let mut values = HashMap::new();
+        let mut separator: String = "".to_string();
+        for key in config_table.keys() {
+            if key == "separator" {
+                separator.push_str(key);
+            } else {
+                routes.push(key.to_owned());
+                values.insert(key.to_owned(), "NONE".to_owned());
+            }
+        }
+
+        Ok(Config {
+            separator,
+            values,
+            routes,
+        })
+    }
 }
 
 fn get_socket_addr(socket_addr: String, xdg_runtime: String) -> String {
@@ -59,20 +105,6 @@ fn get_socket_addr(socket_addr: String, xdg_runtime: String) -> String {
     socket_buffer.push(xdg_runtime);
     socket_buffer.push(format!("{}_telebar_socket", socket_addr));
     socket_buffer.to_string_lossy().into_owned()
-}
-
-type BarResult = Result<String, env::VarError>;
-
-fn get_config(
-    maybe_cli_str: Option<&str>,
-    home: String,
-    telebar_config: BarResult,
-) -> Result<Config, CliParseError> {
-    let config_table = get_config_toml(maybe_cli_str, home, telebar_config)?
-        .as_table()
-        .ok_or_else(|| CliParseError::TomlParseError)?;
-    Err(CliParseError::Home)
-    // Ok(0)
 }
 
 fn get_config_toml(
@@ -94,15 +126,13 @@ fn get_config_path(
 ) -> Result<PathBuf, CliParseError> {
     maybe_cli_str.map_or_else(
         || {
-            telebar_config
-                .and_then(|config| Ok(PathBuf::from(config)))
-                .or_else(|_| {
-                    let mut home_path = PathBuf::from(home);
-                    home_path.push(".config");
-                    home_path.push("telebar");
-                    home_path.push("Config.toml");
-                    Ok(home_path)
-                })
+            telebar_config.map(PathBuf::from).or_else(|_| {
+                let mut home_path = PathBuf::from(home);
+                home_path.push(".config");
+                home_path.push("telebar");
+                home_path.push("Config.toml");
+                Ok(home_path)
+            })
         },
         |path| Ok(PathBuf::from(path)),
     )
@@ -118,9 +148,21 @@ pub enum CliParseError {
 
 pub fn suggest_cli_fix(err: CliParseError) {
     match err {
-        CliParseError::Home => error_message("Something", "useful".to_string()),
-        CliParseError::XdgRuntime => error_message("Something", "useful".to_string()),
-        CliParseError::ConfigFile => error_message("Something", "useful".to_string()),
-        CliParseError::TomlParseError => error_message("Something", "useful".to_string()),
+        CliParseError::Home => error_message(
+"$HOME NOT FOUND",
+"We cannot find your $HOME directory, so we can't locate your telebar config file. Aborting.".to_string()
+),
+        CliParseError::XdgRuntime => error_message(
+"$XDG_RUNTIME_DIR not found",
+"We cannot find the value of $XDG_RUNTIME_DIR, so we can't open a socket. Please make sure your system obeys the XDG base directory specification.".to_string()
+),
+        CliParseError::ConfigFile => error_message(
+"CONFIG FILE ERROR",
+"We could not open and parse your configuration file. Try creating one at ~/.config/telebar/Config.toml".to_string()
+),
+        CliParseError::TomlParseError => error_message(
+"TOML PARSE ERROR",
+"We could not parse your configuration file into a TOML. Please validate it and try again.".to_string()
+),
     }
 }
