@@ -8,15 +8,6 @@ cleanup() {
     rm -rf "$SOCKET_PATH";
 }
 
-# Fail and exit the test
-# $1 == Bold failure error
-# $2 == Additional information/suggestions
-fail() {
-    printf "%s\n" "$1";
-    printf "%s\n" "$2";
-    exit 1;
-}
-
 # Tests a condition for ~0.5 seconds before failing.
 # $1 == condition to wait for
 # $2 == failure message

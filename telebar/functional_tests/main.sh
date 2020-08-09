@@ -9,13 +9,6 @@ if [ ! -f "$TELEBAR_SERVER" ]; then
     cargo build --release --target-dir "$TEST_BUILD_PATH";
 fi
 
-if [ ! -f "$TELEBAR_SERVER" ]; then
-  printf "FAILURE: Could not find server binary.\n";
-  printf "Please create a release build before running this test.\n"
-  cleanup;
-  exit 1
-fi
-
 $TELEBAR_SERVER --id 5 &
 SERVER_PID=$!
 
