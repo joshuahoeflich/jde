@@ -1,3 +1,4 @@
+use super::errors::error_message;
 use clap::{App, Arg, ArgMatches};
 use std::env;
 use std::path::PathBuf;
@@ -21,6 +22,15 @@ pub fn parse_cli_args() -> Result<InputData, CliParseError> {
         socket_addr: get_socket_addr(matches.value_of("id").unwrap_or("0").to_owned())?,
         config: get_config(matches.value_of("config"))?,
     })
+}
+
+pub fn suggest_cli_fix(err: CliParseError) {
+    match err {
+        CliParseError::Home => error_message("Something", "useful".to_string()),
+        CliParseError::XdgRuntime => error_message("Something", "useful".to_string()),
+        CliParseError::ConfigFile => error_message("Something", "useful".to_string()),
+        CliParseError::TomlParseError => error_message("Something", "useful".to_string()),
+    }
 }
 
 fn get_app_matches<'a>() -> ArgMatches<'a> {
