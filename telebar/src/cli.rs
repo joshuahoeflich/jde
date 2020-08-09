@@ -5,15 +5,26 @@ use std::path::PathBuf;
 
 pub fn parse_cli_args() -> Result<InputData, CliParseError> {
     let matches = get_app_matches();
+
+    let xdg_runtime = env::var("XDG_RUNTIME_DIR").map_err(|_| CliParseError::XdgRuntime)?;
+    let socket_addr = get_socket_addr(
+        matches.value_of("id").unwrap_or("0").to_owned(),
+        xdg_runtime,
+    );
+
+    let home = env::var("HOME").map_err(|_| CliParseError::Home)?;
+    let telebar_config = env::var("TELEBAR_CONFIG_FILE");
+    let config = get_config(matches.value_of("config"), home, telebar_config)?;
+
     Ok(InputData {
-        socket_addr: get_socket_addr(matches.value_of("id").unwrap_or("0").to_owned())?,
-        // config: get_config(matches.value_of("config"))?,
+        socket_addr,
+        config,
     })
 }
 
 pub struct InputData {
     pub socket_addr: String,
-    // pub config: Config,
+    pub config: Config,
 }
 
 pub struct Config {
@@ -43,38 +54,50 @@ fn get_app_matches<'a>() -> ArgMatches<'a> {
         .get_matches()
 }
 
-pub fn get_socket_addr(socket_addr: String) -> Result<String, CliParseError> {
-    let xdg_runtime_dir = env::var("XDG_RUNTIME_DIR").map_err(|_| CliParseError::XdgRuntime)?;
+fn get_socket_addr(socket_addr: String, xdg_runtime: String) -> String {
     let mut socket_buffer = PathBuf::new();
-    socket_buffer.push(xdg_runtime_dir);
+    socket_buffer.push(xdg_runtime);
     socket_buffer.push(format!("{}_telebar_socket", socket_addr));
-    Ok(socket_buffer.to_string_lossy().into_owned())
+    socket_buffer.to_string_lossy().into_owned()
 }
 
-pub fn get_config(maybe_cli_str: Option<&str>) -> Result<i32, CliParseError> {
-    let _config_table = get_config_toml(maybe_cli_str)?
+type BarResult = Result<String, env::VarError>;
+
+fn get_config(
+    maybe_cli_str: Option<&str>,
+    home: String,
+    telebar_config: BarResult,
+) -> Result<Config, CliParseError> {
+    let config_table = get_config_toml(maybe_cli_str, home, telebar_config)?
         .as_table()
         .ok_or_else(|| CliParseError::TomlParseError)?;
-    Ok(0)
+    Err(CliParseError::Home)
+    // Ok(0)
 }
 
-pub fn get_config_toml(maybe_cli_str: Option<&str>) -> Result<toml::Value, CliParseError> {
+fn get_config_toml(
+    maybe_cli_str: Option<&str>,
+    home: String,
+    telebar_config: BarResult,
+) -> Result<toml::Value, CliParseError> {
     toml::from_str(
-        &std::fs::read_to_string(get_config_path(maybe_cli_str)?)
+        &std::fs::read_to_string(get_config_path(maybe_cli_str, home, telebar_config)?)
             .map_err(|_| CliParseError::ConfigFile)?,
     )
     .map_err(|_| CliParseError::TomlParseError)
 }
 
-pub fn get_config_path(maybe_cli_str: Option<&str>) -> Result<PathBuf, CliParseError> {
+fn get_config_path(
+    maybe_cli_str: Option<&str>,
+    home: String,
+    telebar_config: BarResult,
+) -> Result<PathBuf, CliParseError> {
     maybe_cli_str.map_or_else(
         || {
-            env::var("TELEBAR_CONFIG_FILE")
-                .map(PathBuf::from)
+            telebar_config
+                .and_then(|config| Ok(PathBuf::from(config)))
                 .or_else(|_| {
-                    let mut home_path = env::var("HOME")
-                        .map(PathBuf::from)
-                        .map_err(|_| CliParseError::Home)?;
+                    let mut home_path = PathBuf::from(home);
                     home_path.push(".config");
                     home_path.push("telebar");
                     home_path.push("Config.toml");
