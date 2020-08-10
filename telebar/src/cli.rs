@@ -82,8 +82,13 @@ impl Cache {
         let mut values = HashMap::new();
         let mut separator: String = "".to_string();
         for key in config_table.keys() {
-            if key == "separator" {
-                separator.push_str(key);
+            if key == "global" {
+                if let Some(toml::Value::String(sep)) = config_table
+                    .get(key)
+                    .and_then(|table| table.get("separator"))
+                {
+                    separator.push_str(&sep);
+                }
             } else {
                 routes.push(key.to_owned());
                 values.insert(key.to_owned(), "NONE".to_owned());
