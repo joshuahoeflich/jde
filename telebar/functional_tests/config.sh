@@ -1,8 +1,9 @@
 #!/bin/sh
 
+export TELEBAR_SOCKET_ID=7
 export TEST_BUILD_PATH=$PWD/test_build
 export TELEBAR_SERVER=$TEST_BUILD_PATH/release/main
-export SOCKET_PATH=$XDG_RUNTIME_DIR/5_telebar_socket;
+export SOCKET_PATH=$XDG_RUNTIME_DIR/"$TELEBAR_SOCKET_ID"_telebar_socket;
 
 cleanup() {
     rm -rf "$SOCKET_PATH";
