@@ -1,17 +1,76 @@
 use super::cli::InputData;
 use super::errors::error_message;
+use std::convert::TryFrom;
 use std::fs;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use tokio::io::AsyncReadExt;
 use tokio::stream::StreamExt;
 
-fn output(status: String, append_newlines: bool) {
-    if append_newlines {
+use x11rb;
+use x11rb::connection::Connection;
+use x11rb::protocol::xproto::{AtomEnum, PropMode};
+
+#[derive(Debug)]
+enum XSetRoot {
+    ConnectionFailed,
+    StringLength,
+    ChangeProperty,
+}
+
+// match x11rb::connect(None) {
+//     Ok((conn, screen_num)) => {
+//         let screen = &conn.setup().roots[screen_num];
+//         match u32::try_from(status.chars().count()) {
+//             Ok(strlen) => {
+//                 x11rb::protocol::xproto::change_property(
+//                     &conn,
+//                     PropMode::Replace,
+//                     screen.root,
+//                     AtomEnum::WM_NAME,
+//                     AtomEnum::STRING,
+//                     8,
+//                     strlen,
+//                     status.as_bytes(),
+//                 );
+//             }
+//             Err(e) => eprintln!("{:?}", e),
+//         }
+//     }
+//     Err(e) => eprintln!("{:?}", e),
+// }
+
+fn xsetroot(status: String) {
+    x11rb::connect(None)
+        .map_err(|_| XSetRoot::ConnectionFailed)
+        .and_then(|(conn, screen_num)| {
+            u32::try_from(status.chars().count())
+                .map_err(|_| XSetRoot::StringLength)
+                .and_then(|strlen| Ok((conn, screen_num, strlen)))
+        })
+        .and_then(|(conn, screen_num, strlen)| {
+            let screen = &conn.setup().roots[screen_num];
+            x11rb::protocol::xproto::change_property(
+                &conn,
+                PropMode::Replace,
+                screen.root,
+                AtomEnum::WM_NAME,
+                AtomEnum::STRING,
+                8,
+                strlen,
+                status.as_bytes(),
+            )
+            .map_err(|_| XSetRoot::ChangeProperty);
+            Ok(())
+        });
+}
+
+fn output(status: String, output_format: String) {
+    if output_format == "newlines" {
         println!("{}", status);
         return;
     }
-    print!("{}", status);
+    xsetroot(status);
 }
 
 pub async fn create_server(
@@ -21,7 +80,7 @@ pub async fn create_server(
     let mut listener = tokio::net::UnixListener::bind(&input_data.socket_addr)
         .map_err(|_| ServerSetup::SocketConnection)?;
 
-    output(input_data.cache.status(), input_data.append_newlines);
+    output(input_data.cache.status(), input_data.output_format);
 
     while let Some(stream) = listener.next().await {
         let should_listen = running.load(Ordering::SeqCst);
@@ -32,7 +91,7 @@ pub async fn create_server(
             Ok(mut stream) => match parse_stream(&mut stream).await {
                 Ok(bar_item) => {
                     input_data.cache.update(bar_item.key, bar_item.value);
-                    output(input_data.cache.status(), input_data.append_newlines);
+                    output(input_data.cache.status(), input_data.output_format);
                 }
                 Err(e) => eprint!("ERR {:?}", e),
             },

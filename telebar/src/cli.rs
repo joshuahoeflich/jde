@@ -11,7 +11,7 @@ pub fn parse_cli_args() -> CliResult {
     get_input_data(
         matches.value_of("id").unwrap_or("0").to_owned(),
         matches.value_of("config"),
-        matches.is_present("newlines"),
+        matches.value_of("output").unwrap_or("newlines").to_owned(),
     )
 }
 
@@ -46,19 +46,21 @@ $XDG_RUNTIME_DIR/${id}_telebar_socket.",
 If we can't find it in any of this locations, we exit with an error code.",
                 ),
         )
-        .arg(
-            Arg::with_name("newlines")
-                .short("n")
-                .long("newlines")
-                .help("Determine whether telebar prints newlines on status updates."),
-        )
+        .arg(Arg::with_name("output").short("o").long("output").help(
+            "Output format for the status bar. Takes two options:
+
+1. \"newlines\" for each update to print a newline, or
+2. \"xsetroot\", to write the status changes to the root X window.
+
+If this option is not passed, we default to \"newlines\".",
+        ))
         .get_matches()
 }
 
 pub fn get_input_data(
     server_id: String,
     config_path: Option<&str>,
-    append_newlines: bool,
+    output_format: String,
 ) -> CliResult {
     let xdg_runtime = env::var("XDG_RUNTIME_DIR").map_err(|_| CliParseError::XdgRuntime)?;
     let home = env::var("HOME").map_err(|_| CliParseError::Home)?;
@@ -66,14 +68,14 @@ pub fn get_input_data(
     Ok(InputData {
         socket_addr: get_socket_addr(server_id, xdg_runtime),
         cache: Cache::new(config_path, home, telebar_env_var)?,
-        append_newlines,
+        output_format,
     })
 }
 
 pub struct InputData {
     pub socket_addr: String,
     pub cache: Cache,
-    pub append_newlines: bool,
+    pub output_format: String,
 }
 
 pub struct Cache {
