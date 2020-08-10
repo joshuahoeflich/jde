@@ -8,9 +8,11 @@ type CliResult = Result<InputData, CliParseError>;
 
 pub fn parse_cli_args() -> CliResult {
     let matches = get_app_matches();
-    let server_id = matches.value_of("id").unwrap_or("0").to_owned();
-    let config_path = matches.value_of("config");
-    get_input_data(server_id, config_path)
+    get_input_data(
+        matches.value_of("id").unwrap_or("0").to_owned(),
+        matches.value_of("config"),
+        matches.is_present("newlines"),
+    )
 }
 
 fn get_app_matches<'a>() -> ArgMatches<'a> {
@@ -43,22 +45,34 @@ $XDG_RUNTIME_DIR/${id}_telebar_socket.",
 If we can't find it in any of this locations, we exit with an error code.",
                 ),
         )
+        .arg(
+            Arg::with_name("newlines")
+                .short("n")
+                .long("newlines")
+                .help("Determine whether telebar prints newlines on status updates."),
+        )
         .get_matches()
 }
 
-pub fn get_input_data(server_id: String, config_path: Option<&str>) -> CliResult {
+pub fn get_input_data(
+    server_id: String,
+    config_path: Option<&str>,
+    append_newlines: bool,
+) -> CliResult {
     let xdg_runtime = env::var("XDG_RUNTIME_DIR").map_err(|_| CliParseError::XdgRuntime)?;
     let home = env::var("HOME").map_err(|_| CliParseError::Home)?;
     let telebar_env_var = env::var("TELEBAR_ENV_VAR_FILE");
     Ok(InputData {
         socket_addr: get_socket_addr(server_id, xdg_runtime),
         cache: Cache::new(config_path, home, telebar_env_var)?,
+        append_newlines,
     })
 }
 
 pub struct InputData {
     pub socket_addr: String,
     pub cache: Cache,
+    pub append_newlines: bool,
 }
 
 pub struct Cache {

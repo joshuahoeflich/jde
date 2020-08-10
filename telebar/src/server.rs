@@ -6,6 +6,14 @@ use std::sync::Arc;
 use tokio::io::AsyncReadExt;
 use tokio::stream::StreamExt;
 
+fn output(status: String, append_newlines: bool) {
+    if append_newlines {
+        println!("{}", status);
+        return;
+    }
+    print!("{}", status);
+}
+
 pub async fn create_server(
     input_data: &mut InputData,
     running: Arc<AtomicBool>,
@@ -13,7 +21,7 @@ pub async fn create_server(
     let mut listener = tokio::net::UnixListener::bind(&input_data.socket_addr)
         .map_err(|_| ServerSetup::SocketConnection)?;
 
-    print!("{}", input_data.cache.status());
+    output(input_data.cache.status(), input_data.append_newlines);
 
     while let Some(stream) = listener.next().await {
         let should_listen = running.load(Ordering::SeqCst);
@@ -24,7 +32,7 @@ pub async fn create_server(
             Ok(mut stream) => match parse_stream(&mut stream).await {
                 Ok(bar_item) => {
                     input_data.cache.update(bar_item.key, bar_item.value);
-                    print!("{}", input_data.cache.status())
+                    output(input_data.cache.status(), input_data.append_newlines);
                 }
                 Err(e) => eprint!("ERR {:?}", e),
             },
