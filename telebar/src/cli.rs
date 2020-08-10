@@ -55,14 +55,20 @@ $XDG_RUNTIME_DIR/${id}_telebar_socket.",
 If we can't find it in any of this locations, we exit with an error code.",
                 ),
         )
-        .arg(Arg::with_name("output").short("o").long("output").help(
-            "Output format for the status bar. Takes two options:
+        .arg(
+            Arg::with_name("output")
+                .short("o")
+                .long("output")
+                .takes_value(true)
+                .help(
+                    "Output format for the status bar. Takes two options:
 
 1. \"newlines\" for each update to print a newline, or
 2. \"xsetroot\", to write the status changes to the root X window.
 
 If this option is not passed, we default to \"newlines\".",
-        ))
+                ),
+        )
         .get_matches()
 }
 

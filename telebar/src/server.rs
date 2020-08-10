@@ -15,9 +15,11 @@ enum XSetRoot {
     ConnectionFailed,
     TryFromU32Failure,
     PaintingError,
+    ConFlushError,
 }
 
 fn xsetroot(status: String) {
+    println!("HELLO");
     match x11rb::connect(None)
         .map_err(|_| XSetRoot::ConnectionFailed)
         .and_then(|(conn, screen_num)| {
@@ -27,7 +29,8 @@ fn xsetroot(status: String) {
         })
         .and_then(|(conn, screen_num, strlen)| {
             let screen = &conn.setup().roots[screen_num];
-            x11rb::protocol::xproto::change_property(
+            println!("REACHED HERE");
+            if let Err(e) = x11rb::protocol::xproto::change_property(
                 &conn,
                 PropMode::Replace,
                 screen.root,
@@ -37,40 +40,21 @@ fn xsetroot(status: String) {
                 strlen,
                 status.as_bytes(),
             )
-            .map(|_| {})
             .map_err(|_| XSetRoot::PaintingError)
+            {
+                return Err(e);
+            }
+            Ok(conn)
+        })
+        .and_then(|conn| {
+            println!("GOT TO CONN FLUSH");
+            conn.flush()
+                .map(|_| {})
+                .map_err(|_| XSetRoot::ConFlushError)
         }) {
         Ok(()) => (),
         Err(err) => eprintln!("{:?}", err),
     }
-    // match x11rb::connect(None).and_then(|(conn, screen_num)| Ok(())) {
-    //     Ok(()) => (),
-    //     Err(err) => eprintln!("{:?}", e),
-    // }
-    // match x11rb::connect(None) {
-    //     Ok((conn, screen_num)) => {
-    //         let screen = &conn.setup().roots[screen_num];
-    //         match u32::try_from(status.chars().count()) {
-    //             Ok(strlen) => {
-    //                 match x11rb::protocol::xproto::change_property(
-    //                     &conn,
-    //                     PropMode::Replace,
-    //                     screen.root,
-    //                     AtomEnum::WM_NAME,
-    //                     AtomEnum::STRING,
-    //                     8,
-    //                     strlen,
-    //                     status.as_bytes(),
-    //                 ) {
-    //                     Ok(_) => (),
-    //                     Err(e) => eprintln!("{:?}", e),
-    //                 }
-    //             }
-    //             Err(e) => eprintln!("{:?}", e),
-    //         }
-    //     }
-    //     Err(e) => eprintln!("{:?}", e),
-    // }
 }
 
 fn output(status: String, output_format: OutputFormat) {
