@@ -19,7 +19,6 @@ enum XSetRoot {
 }
 
 fn xsetroot(status: String) {
-    println!("HELLO");
     match x11rb::connect(None)
         .map_err(|_| XSetRoot::ConnectionFailed)
         .and_then(|(conn, screen_num)| {
@@ -29,7 +28,6 @@ fn xsetroot(status: String) {
         })
         .and_then(|(conn, screen_num, strlen)| {
             let screen = &conn.setup().roots[screen_num];
-            println!("REACHED HERE");
             if let Err(e) = x11rb::protocol::xproto::change_property(
                 &conn,
                 PropMode::Replace,
@@ -47,7 +45,6 @@ fn xsetroot(status: String) {
             Ok(conn)
         })
         .and_then(|conn| {
-            println!("GOT TO CONN FLUSH");
             conn.flush()
                 .map(|_| {})
                 .map_err(|_| XSetRoot::ConFlushError)
