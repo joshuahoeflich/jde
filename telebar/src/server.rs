@@ -3,7 +3,7 @@ use super::errors::error_message;
 use std::fs;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-// use tokio::io::AsyncReadExt;
+use tokio::io::AsyncReadExt;
 use tokio::stream::StreamExt;
 
 pub async fn create_server(
@@ -13,33 +13,63 @@ pub async fn create_server(
     let mut listener = tokio::net::UnixListener::bind(&input_data.socket_addr)
         .map_err(|_| ServerSetup::SocketConnection)?;
 
+    println!("{}", input_data.cache.status());
+
     while let Some(stream) = listener.next().await {
         let should_listen = running.load(Ordering::SeqCst);
         if !should_listen {
             break;
         }
-        // stream
-        //     .map(parse_stream)
-        //     .or_else(|runtime_err| Err(runtime_err));
-        // match stream {
-        //     Ok(mut stream) => {
-        //         parse_stream(&mut stream).await
-        //     },
-        //     Err(e) => eprintln!("ERR {:?}", e),
-        // }
+        match stream {
+            Ok(mut stream) => match parse_stream(&mut stream).await {
+                Ok(bar_item) => {
+                    input_data.cache.update(bar_item.key, bar_item.value);
+                    println!("{}", input_data.cache.status())
+                }
+                Err(e) => eprintln!("ERR {:?}", e),
+            },
+            Err(e) => eprintln!("ERR {:?}", e),
+        }
     }
+
     fs::remove_file(&input_data.socket_addr).map_err(|_| ServerSetup::RemoveSocketFile)?;
     Ok(())
 }
 
-// async fn parse_stream(stream: &mut tokio::net::UnixStream) -> Result<String, ()> {
-//     let mut buffer = Vec::new();
-//     stream.read_to_end(&mut buffer).await.unwrap();
-//     match std::str::from_utf8(&buffer) {
-//         Ok(string) => println!("YOU SENT {}", string),
-//         Err(e) => eprintln!("{:?}", e),
-//     };
-// }
+#[derive(Debug)]
+enum ServerRuntime {
+    StreamRead,
+    StringParse,
+}
+
+struct BarUpdate {
+    key: String,
+    value: String,
+}
+
+async fn parse_stream(stream: &mut tokio::net::UnixStream) -> Result<BarUpdate, ServerRuntime> {
+    let mut buffer = Vec::new();
+    stream
+        .read_to_end(&mut buffer)
+        .await
+        .map_err(|_| ServerRuntime::StreamRead)?;
+    let buf_string = std::str::from_utf8(&buffer).map_err(|_| ServerRuntime::StringParse)?;
+
+    let mut update = BarUpdate {
+        key: String::new(),
+        value: String::new(),
+    };
+
+    for (counter, line) in buf_string.lines().enumerate() {
+        match counter {
+            0 => update.key.push_str(&line.to_lowercase()),
+            1 => update.value.push_str(line),
+            _ => break,
+        }
+    }
+
+    Ok(update)
+}
 
 pub enum ServerSetup {
     SocketConnection,

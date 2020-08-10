@@ -96,13 +96,13 @@ impl Cache {
             routes,
         })
     }
-    fn update(&mut self, key: String, value: String) {
+    pub fn update(&mut self, key: String, value: String) {
         if !self.values.contains_key(&key) {
             return;
         }
         self.values.insert(key, value);
     }
-    fn status(&self) -> String {
+    pub fn status(&self) -> String {
         let mut output: Vec<String> = vec![];
         for key in &self.routes {
             match self.values.get(key) {
