@@ -11,7 +11,16 @@ pub fn parse_cli_args() -> CliResult {
     get_input_data(
         matches.value_of("id").unwrap_or("0").to_owned(),
         matches.value_of("config"),
-        matches.value_of("output").unwrap_or("newlines").to_owned(),
+        matches.value_of("output").map_or_else(
+            || OutputFormat::Newline,
+            |val| {
+                if val == "xsetroot" {
+                    OutputFormat::XSetRoot
+                } else {
+                    OutputFormat::Newline
+                }
+            },
+        ),
     )
 }
 
@@ -60,7 +69,7 @@ If this option is not passed, we default to \"newlines\".",
 pub fn get_input_data(
     server_id: String,
     config_path: Option<&str>,
-    output_format: String,
+    output_format: OutputFormat,
 ) -> CliResult {
     let xdg_runtime = env::var("XDG_RUNTIME_DIR").map_err(|_| CliParseError::XdgRuntime)?;
     let home = env::var("HOME").map_err(|_| CliParseError::Home)?;
@@ -72,10 +81,16 @@ pub fn get_input_data(
     })
 }
 
+#[derive(Clone, Copy)]
+pub enum OutputFormat {
+    XSetRoot,
+    Newline,
+}
+
 pub struct InputData {
     pub socket_addr: String,
     pub cache: Cache,
-    pub output_format: String,
+    pub output_format: OutputFormat,
 }
 
 pub struct Cache {

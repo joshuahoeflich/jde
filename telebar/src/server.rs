@@ -1,4 +1,4 @@
-use super::cli::InputData;
+use super::cli::{InputData, OutputFormat};
 use super::errors::error_message;
 use std::convert::TryFrom;
 use std::fs;
@@ -7,70 +7,41 @@ use std::sync::Arc;
 use tokio::io::AsyncReadExt;
 use tokio::stream::StreamExt;
 
-use x11rb;
 use x11rb::connection::Connection;
 use x11rb::protocol::xproto::{AtomEnum, PropMode};
 
-#[derive(Debug)]
-enum XSetRoot {
-    ConnectionFailed,
-    StringLength,
-    ChangeProperty,
-}
-
-// match x11rb::connect(None) {
-//     Ok((conn, screen_num)) => {
-//         let screen = &conn.setup().roots[screen_num];
-//         match u32::try_from(status.chars().count()) {
-//             Ok(strlen) => {
-//                 x11rb::protocol::xproto::change_property(
-//                     &conn,
-//                     PropMode::Replace,
-//                     screen.root,
-//                     AtomEnum::WM_NAME,
-//                     AtomEnum::STRING,
-//                     8,
-//                     strlen,
-//                     status.as_bytes(),
-//                 );
-//             }
-//             Err(e) => eprintln!("{:?}", e),
-//         }
-//     }
-//     Err(e) => eprintln!("{:?}", e),
-// }
-
 fn xsetroot(status: String) {
-    x11rb::connect(None)
-        .map_err(|_| XSetRoot::ConnectionFailed)
-        .and_then(|(conn, screen_num)| {
-            u32::try_from(status.chars().count())
-                .map_err(|_| XSetRoot::StringLength)
-                .and_then(|strlen| Ok((conn, screen_num, strlen)))
-        })
-        .and_then(|(conn, screen_num, strlen)| {
+    match x11rb::connect(None) {
+        Ok((conn, screen_num)) => {
             let screen = &conn.setup().roots[screen_num];
-            x11rb::protocol::xproto::change_property(
-                &conn,
-                PropMode::Replace,
-                screen.root,
-                AtomEnum::WM_NAME,
-                AtomEnum::STRING,
-                8,
-                strlen,
-                status.as_bytes(),
-            )
-            .map_err(|_| XSetRoot::ChangeProperty);
-            Ok(())
-        });
+            match u32::try_from(status.chars().count()) {
+                Ok(strlen) => {
+                    match x11rb::protocol::xproto::change_property(
+                        &conn,
+                        PropMode::Replace,
+                        screen.root,
+                        AtomEnum::WM_NAME,
+                        AtomEnum::STRING,
+                        8,
+                        strlen,
+                        status.as_bytes(),
+                    ) {
+                        Ok(_) => (),
+                        Err(e) => eprintln!("{:?}", e),
+                    }
+                }
+                Err(e) => eprintln!("{:?}", e),
+            }
+        }
+        Err(e) => eprintln!("{:?}", e),
+    }
 }
 
-fn output(status: String, output_format: String) {
-    if output_format == "newlines" {
-        println!("{}", status);
-        return;
+fn output(status: String, output_format: OutputFormat) {
+    match output_format {
+        OutputFormat::Newline => println!("{}", status),
+        OutputFormat::XSetRoot => xsetroot(status),
     }
-    xsetroot(status);
 }
 
 pub async fn create_server(
