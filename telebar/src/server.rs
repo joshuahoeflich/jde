@@ -9,13 +9,14 @@ use tokio::stream::StreamExt;
 
 use x11rb::connection::Connection;
 use x11rb::protocol::xproto::{AtomEnum, PropMode};
+use x11rb::wrapper::ConnectionExt;
 
 #[derive(Debug)]
 enum XSetRoot {
     ConnectionFailed,
     TryFromU32Failure,
     PaintingError,
-    ConFlushError,
+    ConSyncError,
 }
 
 fn xsetroot(status: String) {
@@ -44,11 +45,8 @@ fn xsetroot(status: String) {
             }
             Ok(conn)
         })
-        .and_then(|conn| {
-            conn.flush()
-                .map(|_| {})
-                .map_err(|_| XSetRoot::ConFlushError)
-        }) {
+        .and_then(|conn| conn.sync().map(|_| ()).map_err(|_| XSetRoot::ConSyncError))
+    {
         Ok(()) => (),
         Err(err) => eprintln!("{:?}", err),
     }
