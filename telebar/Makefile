@@ -1,4 +1,15 @@
+include examples/config.sh
+
+.DEFAULT_TARGET = help
+.PHONY: help
+help: ## Display this help message
+	@ grep -E '^[a-zA-Z_-]+:.*?## .*$$' Makefile | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+
 .PHONY: test
-test:
+test: ## Run all unit, integration, and functional tests
 	@ cargo test
 	@ cd functional_tests && sh main.sh
+
+.PHONY: example
+example: ## Start up an example telebar-server
+	@ cargo run -- --newlines --id ${TELEBAR_SERVER_ID}

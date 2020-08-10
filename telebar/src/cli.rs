@@ -16,10 +16,11 @@ pub fn parse_cli_args() -> CliResult {
 }
 
 fn get_app_matches<'a>() -> ArgMatches<'a> {
-    App::new("telebar-server")
+    App::new("telebar")
+        .name("telebar")
         .version("1.0")
         .author("Joshua Hoeflich")
-        .about("Server for telebar.")
+        .about("Statusbar server")
         .arg(
             Arg::with_name("id")
                 .short("i")
