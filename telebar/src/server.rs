@@ -13,7 +13,7 @@ pub async fn create_server(
     let mut listener = tokio::net::UnixListener::bind(&input_data.socket_addr)
         .map_err(|_| ServerSetup::SocketConnection)?;
 
-    println!("{}", input_data.cache.status());
+    print!("{}", input_data.cache.status());
 
     while let Some(stream) = listener.next().await {
         let should_listen = running.load(Ordering::SeqCst);
@@ -24,11 +24,11 @@ pub async fn create_server(
             Ok(mut stream) => match parse_stream(&mut stream).await {
                 Ok(bar_item) => {
                     input_data.cache.update(bar_item.key, bar_item.value);
-                    println!("{}", input_data.cache.status())
+                    print!("{}", input_data.cache.status())
                 }
-                Err(e) => eprintln!("ERR {:?}", e),
+                Err(e) => eprint!("ERR {:?}", e),
             },
-            Err(e) => eprintln!("ERR {:?}", e),
+            Err(e) => eprint!("ERR {:?}", e),
         }
     }
 
