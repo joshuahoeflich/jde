@@ -11,12 +11,41 @@ use x11rb::connection::Connection;
 use x11rb::protocol::xproto::{AtomEnum, PropMode};
 use x11rb::wrapper::ConnectionExt;
 
+pub async fn create_server(
+    input_data: &mut InputData,
+    running: Arc<AtomicBool>,
+) -> Result<(), ServerSetup> {
+    let mut listener = tokio::net::UnixListener::bind(&input_data.socket_addr)
+        .map_err(|_| ServerSetup::SocketConnection)?;
+
+    output(input_data.cache.status(), input_data.output_format);
+
+    while let Some(stream) = listener.next().await {
+        let should_listen = running.load(Ordering::SeqCst);
+        if !should_listen {
+            break;
+        }
+        if let Err(e) = handle_stream(input_data, stream).await {
+            eprintln!("{:?}", e);
+        }
+    }
+    fs::remove_file(&input_data.socket_addr).map_err(|_| ServerSetup::RemoveSocketFile)?;
+    Ok(())
+}
+
 #[derive(Debug)]
 enum XSetRoot {
     ConnectionFailed,
     TryFromU32Failure,
     PaintingError,
     ConSyncError,
+}
+
+fn output(status: String, output_format: OutputFormat) {
+    match output_format {
+        OutputFormat::Newline => println!("{}", status),
+        OutputFormat::XSetRoot => xsetroot(status),
+    }
 }
 
 fn xsetroot(status: String) {
@@ -52,41 +81,18 @@ fn xsetroot(status: String) {
     }
 }
 
-fn output(status: String, output_format: OutputFormat) {
-    match output_format {
-        OutputFormat::Newline => println!("{}", status),
-        OutputFormat::XSetRoot => xsetroot(status),
-    }
-}
-
-pub async fn create_server(
+async fn handle_stream(
     input_data: &mut InputData,
-    running: Arc<AtomicBool>,
-) -> Result<(), ServerSetup> {
-    let mut listener = tokio::net::UnixListener::bind(&input_data.socket_addr)
-        .map_err(|_| ServerSetup::SocketConnection)?;
-
-    output(input_data.cache.status(), input_data.output_format);
-
-    while let Some(stream) = listener.next().await {
-        let should_listen = running.load(Ordering::SeqCst);
-        if !should_listen {
-            break;
-        }
-        match stream {
-            Ok(mut stream) => match parse_stream(&mut stream).await {
-                Ok(bar_item) => {
-                    input_data.cache.update(bar_item.key, bar_item.value);
-                    output(input_data.cache.status(), input_data.output_format);
-                }
-                Err(e) => eprint!("ERR {:?}", e),
-            },
-            Err(e) => eprint!("ERR {:?}", e),
-        }
+    stream: Result<tokio::net::UnixStream, std::io::Error>,
+) -> Result<(), ServerRuntime> {
+    if stream.is_err() {
+        return Err(ServerRuntime::StreamRead);
     }
-
-    fs::remove_file(&input_data.socket_addr).map_err(|_| ServerSetup::RemoveSocketFile)?;
-    Ok(())
+    let mut stream = stream.unwrap();
+    parse_stream(&mut stream).await.map(|bar_item| {
+        input_data.cache.update(bar_item.key, bar_item.value);
+        output(input_data.cache.status(), input_data.output_format);
+    })
 }
 
 #[derive(Debug)]
