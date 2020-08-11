@@ -12,4 +12,4 @@ test: ## Run all unit, integration, and functional tests
 
 .PHONY: example
 example: ## Start up an example telebar-server
-	@ cargo run -- --newlines --id ${TELEBAR_SERVER_ID}
+	@ cargo run -- --output xsetroot --id ${TELEBAR_SERVER_ID}
