@@ -1,6 +1,6 @@
 use super::errors::error_message;
 use clap::{App, Arg, ArgMatches};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::env;
 use std::path::PathBuf;
 
@@ -101,8 +101,7 @@ pub struct InputData {
 
 pub struct Cache {
     pub separator: String,
-    pub routes: Vec<String>,
-    pub values: HashMap<String, String>,
+    pub values: BTreeMap<String, String>,
 }
 
 impl Cache {
@@ -116,8 +115,7 @@ impl Cache {
             .as_table()
             .ok_or_else(|| CliParseError::TomlParseError)?;
 
-        let mut routes = vec![];
-        let mut values = HashMap::new();
+        let mut values = BTreeMap::new();
         let mut separator: String = "".to_string();
         for key in config_table.keys() {
             if key == "global" {
@@ -128,16 +126,10 @@ impl Cache {
                     separator.push_str(&sep);
                 }
             } else {
-                routes.push(key.to_owned());
                 values.insert(key.to_owned(), "NONE".to_owned());
             }
         }
-
-        Ok(Cache {
-            separator,
-            values,
-            routes,
-        })
+        Ok(Cache { separator, values })
     }
     pub fn update(&mut self, key: String, value: String) {
         if !self.values.contains_key(&key) {
@@ -147,11 +139,8 @@ impl Cache {
     }
     pub fn status(&self) -> String {
         let mut output: Vec<String> = vec![];
-        for key in &self.routes {
-            match self.values.get(key) {
-                Some(val) => output.push(val.to_string()),
-                None => unreachable!(),
-            }
+        for value in self.values.values() {
+            output.push(value.to_string());
         }
         output.join(&self.separator)
     }
