@@ -1,4 +1,4 @@
-include examples/config.sh
+include config.mk
 
 .DEFAULT_TARGET = help
 .PHONY: help
@@ -8,8 +8,8 @@ help: ## Display this help message
 .PHONY: test
 test: ## Run all unit, integration, and functional tests
 	@ cargo test
-	@ cd functional_tests && sh main.sh
+	@ ./functional_tests/main.sh
 
 .PHONY: example
 example: ## Start up an example telebar-server
-	@ cargo run -- --output xsetroot --id ${TELEBAR_SERVER_ID}
+	@ cargo run -- --output xsetroot --id ${TELEBAR_EXAMPLE_SOCKET_ID}

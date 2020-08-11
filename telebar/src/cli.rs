@@ -290,4 +290,7 @@ mod tests {
             OutputFormat::XSetRoot => (),
         }
     }
+
+    #[test]
+    fn reading_toml() {}
 }
