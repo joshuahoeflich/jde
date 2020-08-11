@@ -106,19 +106,23 @@ async fn parse_stream(stream: &mut tokio::net::UnixStream) -> Result<BarUpdate, 
         .read_to_end(&mut buffer)
         .await
         .map_err(|_| ServerRuntime::StreamRead)?;
-    let buf_string = std::str::from_utf8(&buffer).map_err(|_| ServerRuntime::StringParse)?;
+    let buffer_string = std::str::from_utf8(&buffer).map_err(|_| ServerRuntime::StringParse)?;
+    Ok(get_bar_update(buffer_string))
+}
+
+fn get_bar_update(buffer_string: &str) -> BarUpdate {
     let mut update = BarUpdate {
         key: String::new(),
         value: String::new(),
     };
-    for (counter, line) in buf_string.lines().enumerate() {
+    for (counter, line) in buffer_string.lines().enumerate() {
         match counter {
             0 => update.key.push_str(&line.to_lowercase()),
             1 => update.value.push_str(line),
             _ => break,
         }
     }
-    Ok(update)
+    update
 }
 
 pub enum ServerSetup {
