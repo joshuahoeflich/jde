@@ -4,12 +4,12 @@
 [global]
 separator=" | "
 
-# Define new sections of your status bar. Note that order matters; the blocks
-# you define first will get printed first.
-[battery]
-script="/path/to/some/file"
-interval=20
-
+# Define new sections of your status bar. These will appear based on the
+# *alphabetical order* of the section, so battery will come before weather.
 [weather]
 script="/path/to/another/file"
 interval=5
+
+[battery]
+script="/path/to/some/file"
+interval=20
