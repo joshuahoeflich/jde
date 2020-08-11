@@ -11,16 +11,7 @@ pub fn parse_cli_args() -> CliResult {
     get_input_data(
         matches.value_of("id").unwrap_or("0").to_owned(),
         matches.value_of("config"),
-        matches.value_of("output").map_or_else(
-            || OutputFormat::Newline,
-            |val| {
-                if val == "xsetroot" {
-                    OutputFormat::XSetRoot
-                } else {
-                    OutputFormat::Newline
-                }
-            },
-        ),
+        get_output(matches.value_of("output")),
     )
 }
 
@@ -72,6 +63,19 @@ If this option is not passed, we default to \"newlines\".",
         .get_matches()
 }
 
+fn get_output(maybe_output: Option<&str>) -> OutputFormat {
+    maybe_output.map_or_else(
+        || OutputFormat::Newline,
+        |val| {
+            if val == "xsetroot" {
+                OutputFormat::XSetRoot
+            } else {
+                OutputFormat::Newline
+            }
+        },
+    )
+}
+
 pub fn get_input_data(
     server_id: String,
     config_path: Option<&str>,
@@ -87,7 +91,7 @@ pub fn get_input_data(
     })
 }
 
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub enum OutputFormat {
     XSetRoot,
     Newline,
@@ -219,7 +223,7 @@ pub fn suggest_cli_fix(err: CliParseError) {
 
 #[cfg(test)]
 mod tests {
-    use super::{get_config_path, get_socket_addr};
+    use super::{get_config_path, get_output, get_socket_addr, OutputFormat};
     use std::path::PathBuf;
 
     #[test]
@@ -261,5 +265,29 @@ mod tests {
         let config_path =
             get_config_path(None, Err(std::env::VarError::NotPresent), "~".to_string()).unwrap();
         assert_eq!(config_path, PathBuf::from("~/.config/telebar/Config.toml"));
+    }
+
+    #[test]
+    fn get_output_none() {
+        match get_output(None) {
+            OutputFormat::Newline => (),
+            OutputFormat::XSetRoot => unreachable!(),
+        }
+    }
+
+    #[test]
+    fn get_output_output() {
+        match get_output(Some("output")) {
+            OutputFormat::Newline => (),
+            OutputFormat::XSetRoot => unreachable!(),
+        }
+    }
+
+    #[test]
+    fn get_output_xsetroot() {
+        match get_output(Some("xsetroot")) {
+            OutputFormat::Newline => unreachable!(),
+            OutputFormat::XSetRoot => (),
+        }
     }
 }
