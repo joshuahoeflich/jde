@@ -33,6 +33,45 @@ pub async fn create_server(
     Ok(())
 }
 
+async fn handle_stream(
+    input_data: &mut InputData,
+    stream: Result<tokio::net::UnixStream, std::io::Error>,
+) -> Result<(), ServerRuntime> {
+    if stream.is_err() {
+        return Err(ServerRuntime::StreamRead);
+    }
+    let mut stream = stream.unwrap();
+    parse_stream(&mut stream).await.map(|bar_item| {
+        input_data.cache.update(bar_item.key, bar_item.value);
+        output(input_data.cache.status(), input_data.output_format);
+    })
+}
+
+async fn parse_stream(stream: &mut tokio::net::UnixStream) -> Result<BarUpdate, ServerRuntime> {
+    let mut buffer = Vec::new();
+    stream
+        .read_to_end(&mut buffer)
+        .await
+        .map_err(|_| ServerRuntime::StreamRead)?;
+    let buffer_string = std::str::from_utf8(&buffer).map_err(|_| ServerRuntime::StringParse)?;
+    Ok(get_bar_update(buffer_string))
+}
+
+fn get_bar_update(buffer_string: &str) -> BarUpdate {
+    let mut update = BarUpdate {
+        key: String::new(),
+        value: String::new(),
+    };
+    for (counter, line) in buffer_string.lines().enumerate() {
+        match counter {
+            0 => update.key.push_str(&line.to_lowercase()),
+            1 => update.value.push_str(line),
+            _ => break,
+        }
+    }
+    update
+}
+
 #[derive(Debug)]
 enum XSetRoot {
     ConnectionFailed,
@@ -45,6 +84,36 @@ fn output(status: String, output_format: OutputFormat) {
     match output_format {
         OutputFormat::Newline => println!("{}", status),
         OutputFormat::XSetRoot => xsetroot(status),
+    }
+}
+
+#[derive(Debug)]
+enum ServerRuntime {
+    StreamRead,
+    StringParse,
+}
+
+struct BarUpdate {
+    key: String,
+    value: String,
+}
+
+pub enum ServerSetup {
+    SocketConnection,
+    RemoveSocketFile,
+}
+
+pub fn suggest_server_fix(error: ServerSetup, socket_addr: &str) {
+    let path = socket_addr.to_owned();
+    match error {
+        ServerSetup::SocketConnection => error_message(
+            "COULD NOT CONNECT TO SOCKET",
+            format!("Try deleting the file {}", path),
+        ),
+        ServerSetup::RemoveSocketFile => error_message(
+            "COULD NOT DELETE SOCKET FILE",
+            format!("Please delete the file {}", path),
+        ),
     }
 }
 
@@ -78,74 +147,5 @@ fn xsetroot(status: String) {
     {
         Ok(()) => (),
         Err(err) => eprintln!("{:?}", err),
-    }
-}
-
-async fn handle_stream(
-    input_data: &mut InputData,
-    stream: Result<tokio::net::UnixStream, std::io::Error>,
-) -> Result<(), ServerRuntime> {
-    if stream.is_err() {
-        return Err(ServerRuntime::StreamRead);
-    }
-    let mut stream = stream.unwrap();
-    parse_stream(&mut stream).await.map(|bar_item| {
-        input_data.cache.update(bar_item.key, bar_item.value);
-        output(input_data.cache.status(), input_data.output_format);
-    })
-}
-
-#[derive(Debug)]
-enum ServerRuntime {
-    StreamRead,
-    StringParse,
-}
-
-struct BarUpdate {
-    key: String,
-    value: String,
-}
-
-async fn parse_stream(stream: &mut tokio::net::UnixStream) -> Result<BarUpdate, ServerRuntime> {
-    let mut buffer = Vec::new();
-    stream
-        .read_to_end(&mut buffer)
-        .await
-        .map_err(|_| ServerRuntime::StreamRead)?;
-    let buffer_string = std::str::from_utf8(&buffer).map_err(|_| ServerRuntime::StringParse)?;
-    Ok(get_bar_update(buffer_string))
-}
-
-fn get_bar_update(buffer_string: &str) -> BarUpdate {
-    let mut update = BarUpdate {
-        key: String::new(),
-        value: String::new(),
-    };
-    for (counter, line) in buffer_string.lines().enumerate() {
-        match counter {
-            0 => update.key.push_str(&line.to_lowercase()),
-            1 => update.value.push_str(line),
-            _ => break,
-        }
-    }
-    update
-}
-
-pub enum ServerSetup {
-    SocketConnection,
-    RemoveSocketFile,
-}
-
-pub fn suggest_server_fix(error: ServerSetup, socket_addr: &str) {
-    let path = socket_addr.to_owned();
-    match error {
-        ServerSetup::SocketConnection => error_message(
-            "COULD NOT CONNECT TO SOCKET",
-            format!("Try deleting the file {}", path),
-        ),
-        ServerSetup::RemoveSocketFile => error_message(
-            "COULD NOT DELETE SOCKET FILE",
-            format!("Please delete the file {}", path),
-        ),
     }
 }
