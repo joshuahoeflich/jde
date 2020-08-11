@@ -86,7 +86,7 @@ pub fn get_input_data(
     let telebar_env_var = env::var("TELEBAR_ENV_VAR_FILE");
     Ok(InputData {
         socket_addr: get_socket_addr(server_id, xdg_runtime),
-        cache: Cache::new(config_path, home, telebar_env_var)?,
+        cache: Cache::new(config_path, telebar_env_var, home)?,
         output_format,
     })
 }
@@ -103,6 +103,7 @@ pub struct InputData {
     pub output_format: OutputFormat,
 }
 
+#[derive(Debug)]
 pub struct Cache {
     pub separator: String,
     pub values: BTreeMap<String, String>,
@@ -111,8 +112,8 @@ pub struct Cache {
 impl Cache {
     fn new(
         maybe_cli_str: Option<&str>,
-        home_env_var: String,
         telebar_env_var: Result<String, env::VarError>,
+        home_env_var: String,
     ) -> Result<Cache, CliParseError> {
         let config_toml = get_config_toml(maybe_cli_str, telebar_env_var, home_env_var)?;
         let config_table = config_toml
@@ -223,7 +224,11 @@ pub fn suggest_cli_fix(err: CliParseError) {
 
 #[cfg(test)]
 mod tests {
-    use super::{get_config_path, get_output, get_socket_addr, OutputFormat};
+    use super::{
+        get_config_path, get_config_toml, get_output, get_socket_addr, Cache, OutputFormat,
+    };
+    use std::collections::BTreeMap;
+    use std::env;
     use std::path::PathBuf;
 
     #[test]
@@ -292,5 +297,63 @@ mod tests {
     }
 
     #[test]
-    fn reading_toml() {}
+    fn reading_toml_path() {
+        let config_path = env::var("TELEBAR_TEST_CONFIG_FILE").unwrap();
+        let expected_toml: toml::Value =
+            toml::from_str(&std::fs::read_to_string(&config_path).unwrap()).unwrap();
+        let actual_toml =
+            get_config_toml(Some(&config_path), Ok("".to_string()), "".to_string()).unwrap();
+        assert_eq!(expected_toml, actual_toml)
+    }
+
+    #[test]
+    fn reading_toml_env() {
+        let config_path = env::var("TELEBAR_TEST_CONFIG_FILE").unwrap();
+        let expected_toml: toml::Value =
+            toml::from_str(&std::fs::read_to_string(&config_path).unwrap()).unwrap();
+        let actual_toml = get_config_toml(None, Ok(config_path), "".to_string()).unwrap();
+        assert_eq!(expected_toml, actual_toml)
+    }
+
+    #[test]
+    fn cache_constructor() {
+        let config_path = env::var("TELEBAR_TEST_CONFIG_FILE").unwrap();
+        let mut btree = BTreeMap::new();
+        btree.insert("battery".to_string(), "NONE".to_string());
+        btree.insert("weather".to_string(), "NONE".to_string());
+        let expected_cache = Cache {
+            separator: " | ".to_string(),
+            values: btree,
+        };
+        let actual_cache =
+            Cache::new(Some(&config_path), Ok("".to_string()), "".to_string()).unwrap();
+        assert_eq!(expected_cache.separator, actual_cache.separator);
+        assert_eq!(expected_cache.values, actual_cache.values);
+    }
+
+    #[test]
+    fn cache_status() {
+        let mut btree = BTreeMap::new();
+        btree.insert("battery".to_string(), "NONE".to_string());
+        btree.insert("weather".to_string(), "NONE".to_string());
+        let cache = Cache {
+            separator: " | ".to_string(),
+            values: btree,
+        };
+        assert_eq!(cache.status(), "NONE | NONE".to_string());
+    }
+
+    #[test]
+    fn cache_updates() {
+        let mut btree = BTreeMap::new();
+        btree.insert("battery".to_string(), "NONE".to_string());
+        btree.insert("weather".to_string(), "NONE".to_string());
+        let mut cache = Cache {
+            separator: " | ".to_string(),
+            values: btree,
+        };
+        cache.update("battery".to_string(), "Battery!".to_string());
+        cache.update("weather".to_string(), "Weather!".to_string());
+        assert_eq!(cache.status(), "Battery! | Weather!".to_string());
+    }
 }
