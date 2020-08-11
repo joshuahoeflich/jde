@@ -1,7 +1,9 @@
 #!/bin/sh
 
 export TELEBAR_SOCKET_ID=7
+export TELEBAR_CONFIG_FILE=$PWD/Config.toml
 export TEST_BUILD_PATH=$PWD/test_build
+
 export TELEBAR_SERVER=$TEST_BUILD_PATH/release/main
 export SOCKET_PATH=$XDG_RUNTIME_DIR/"$TELEBAR_SOCKET_ID"_telebar_socket;
 

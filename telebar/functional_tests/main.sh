@@ -6,7 +6,7 @@ printf "Testing telebar-server cleanup...\n"
 
 cargo build --release --target-dir "$TEST_BUILD_PATH";
 
-$TELEBAR_SERVER --id "$TELEBAR_SOCKET_ID" --output newlines &
+$TELEBAR_SERVER --id "$TELEBAR_SOCKET_ID" --output newlines --config "$TELEBAR_CONFIG_FILE" &
 SERVER_PID=$!
 
 wait_for "[ ! -e $SOCKET_PATH ]" 'FAILURE: Server did not create socket quickly enough.';
