@@ -8,10 +8,8 @@ use x11rb::connection::Connection;
 use x11rb::protocol::xproto::{AtomEnum, PropMode};
 use x11rb::wrapper::ConnectionExt;
 
-pub async fn create_server(input_data: &mut InputData) -> Result<(), ServerSetup> {
-    let mut listener = tokio::net::UnixListener::bind(&input_data.socket_addr)
-        .map_err(|_| ServerSetup::SocketConnection)?;
-
+pub async fn create_server(input_data: &mut InputData) -> Result<(), std::io::Error> {
+    let mut listener = tokio::net::UnixListener::bind(&input_data.socket_addr)?;
     output(input_data.cache.status(), input_data.output_format);
 
     while let Some(stream) = listener.next().await {
@@ -83,23 +81,11 @@ struct BarUpdate {
     value: String,
 }
 
-pub enum ServerSetup {
-    SocketConnection,
-    RemoveSocketFile,
-}
-
-pub fn suggest_server_fix(error: ServerSetup, socket_addr: &str) {
-    let path = socket_addr.to_owned();
-    match error {
-        ServerSetup::SocketConnection => error_message(
-            "COULD NOT CONNECT TO SOCKET",
-            format!("Try deleting the file {}", path),
-        ),
-        ServerSetup::RemoveSocketFile => error_message(
-            "COULD NOT DELETE SOCKET FILE",
-            format!("Please delete the file {}", path),
-        ),
-    }
+pub fn suggest_server_fix(_: std::io::Error) {
+    error_message(
+        "COULD NOT CONNECT TO SOCKET",
+        "Please make sure you passed a unique id to telebar_server and try again.",
+    );
 }
 
 fn xsetroot(status: String) {

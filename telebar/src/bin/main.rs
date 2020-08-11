@@ -13,7 +13,7 @@ async fn main() {
     match create_server(&mut input_data).await {
         Ok(()) => process::exit(0),
         Err(err) => {
-            suggest_server_fix(err, &input_data.socket_addr);
+            suggest_server_fix(err);
             process::exit(1);
         }
     }

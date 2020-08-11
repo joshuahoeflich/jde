@@ -27,8 +27,8 @@ fn get_app_matches<'a>() -> ArgMatches<'a> {
                 .long("id")
                 .takes_value(true)
                 .help(
-                    "ID of the server you want to start. Defaults to 0. You can find the socket at
-$XDG_RUNTIME_DIR/${id}_telebar_socket.",
+                    "ID of the server you want to start. Defaults to 0. We create a Unix domain
+socket in Linux's abstract namespace at ${id}_telebar_socket",
                 ),
         )
         .arg(
@@ -68,10 +68,9 @@ fn get_output(maybe_output: Option<&str>) -> OutputFormat {
         || OutputFormat::Newline,
         |val| {
             if val == "xsetroot" {
-                OutputFormat::XSetRoot
-            } else {
-                OutputFormat::Newline
+                return OutputFormat::XSetRoot;
             }
+            OutputFormat::Newline
         },
     )
 }
@@ -188,7 +187,6 @@ fn get_config_path(
 #[derive(Debug, PartialEq)]
 pub enum CliParseError {
     Home,
-    XdgRuntime,
     ConfigFile,
     TomlParseError,
 }
@@ -197,19 +195,15 @@ pub fn suggest_cli_fix(err: CliParseError) {
     match err {
         CliParseError::Home => error_message(
 "$HOME NOT FOUND",
-"We cannot find your $HOME directory, so we can't locate your telebar config file. Aborting.".to_string()
-),
-        CliParseError::XdgRuntime => error_message(
-"$XDG_RUNTIME_DIR not found",
-"We cannot find the value of $XDG_RUNTIME_DIR, so we can't open a socket. Please make sure your system obeys the XDG base directory specification.".to_string()
+"We cannot find your $HOME directory, so we can't locate your telebar config file. Aborting."
 ),
         CliParseError::ConfigFile => error_message(
 "CONFIG FILE ERROR",
-"We could not open and parse your configuration file. Try creating one at ~/.config/telebar/Config.toml".to_string()
+"We could not open and parse your configuration file. Try creating one at ~/.config/telebar/Config.toml"
 ),
         CliParseError::TomlParseError => error_message(
 "TOML PARSE ERROR",
-"We could not parse your configuration file into a TOML. Please validate it and try again.".to_string()
+"We could not parse your configuration file into a TOML. Please validate it and try again."
 ),
     }
 }
