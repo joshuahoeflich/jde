@@ -41,20 +41,16 @@ async fn handle_stream(
         return Err(ServerRuntime::StreamRead);
     }
     let mut stream = stream.unwrap();
-    parse_stream(&mut stream).await.map(|bar_item| {
-        input_data.cache.update(bar_item.key, bar_item.value);
-        output(input_data.cache.status(), input_data.output_format);
-    })
-}
-
-async fn parse_stream(stream: &mut tokio::net::UnixStream) -> Result<BarUpdate, ServerRuntime> {
     let mut buffer = Vec::new();
     stream
         .read_to_end(&mut buffer)
         .await
         .map_err(|_| ServerRuntime::StreamRead)?;
     let buffer_string = std::str::from_utf8(&buffer).map_err(|_| ServerRuntime::StringParse)?;
-    Ok(get_bar_update(buffer_string))
+    let bar_item = get_bar_update(buffer_string);
+    input_data.cache.update(bar_item.key, bar_item.value);
+    output(input_data.cache.status(), input_data.output_format);
+    Ok(())
 }
 
 fn get_bar_update(buffer_string: &str) -> BarUpdate {
