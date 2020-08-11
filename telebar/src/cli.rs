@@ -84,7 +84,7 @@ pub fn get_input_data(
     let home = env::var("HOME").map_err(|_| CliParseError::Home)?;
     let telebar_env_var = env::var("TELEBAR_ENV_VAR_FILE");
     Ok(InputData {
-        socket_addr: get_socket_addr(server_id),
+        socket_addr: format!("\0{}_telebar_socket", server_id),
         cache: Cache::new(config_path, telebar_env_var, home)?,
         output_format,
     })
@@ -148,13 +148,6 @@ impl Cache {
         }
         output.join(&self.separator)
     }
-}
-
-fn get_socket_addr(socket_addr: String) -> String {
-    let mut socket_buffer = PathBuf::new();
-    socket_buffer.push("\0");
-    socket_buffer.push(format!("{}_telebar_socket", socket_addr));
-    socket_buffer.to_string_lossy().into_owned()
 }
 
 fn get_config_toml(
@@ -223,17 +216,10 @@ pub fn suggest_cli_fix(err: CliParseError) {
 
 #[cfg(test)]
 mod tests {
-    use super::{
-        get_config_path, get_config_toml, get_output, get_socket_addr, Cache, OutputFormat,
-    };
+    use super::{get_config_path, get_config_toml, get_output, Cache, OutputFormat};
     use std::collections::BTreeMap;
     use std::env;
     use std::path::PathBuf;
-
-    #[test]
-    fn socket_addr() {
-        assert_eq!(get_socket_addr("1".to_string()), "\0/1_telebar_socket");
-    }
 
     #[test]
     fn config_path_specified() {

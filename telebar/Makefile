@@ -12,14 +12,9 @@ install: build/release/main ## Install the production binary onto this system
 help: ## Display this help message
 	@ grep -E '^[/a-zA-Z_-]+:.*?## .*$$' Makefile | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-.PHONY: test-unit
-test-unit: ## Run all unit and integration tests.
-	@ cargo test
-
 .PHONY: test
-test: ## Run all unit, integration, and functional tests
+test: ## Run all tests
 	@ cargo test
-	@ sh functional_tests/main.sh
 
 .PHONY: example
 example: ## Start up an example telebar-server
