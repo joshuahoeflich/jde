@@ -1,3 +1,2 @@
 #!/bin/sh
-
-printf "%s\n%s" "battery" "Battery update!" | nc -U "$XDG_RUNTIME_DIR"/"$TELEBAR_SERVER_ID"_telebar_socket -w0
+printf "%s\n%s" "battery" "This actually works!" | socat -t0 ABSTRACT-CONNECT:/"$TELEBAR_EXAMPLE_SOCKET_ID"_telebar_socket STDIN
