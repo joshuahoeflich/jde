@@ -1,9 +1,6 @@
 use super::cli::{InputData, OutputFormat};
 use super::errors::error_message;
 use std::convert::TryFrom;
-use std::fs;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
 use tokio::io::AsyncReadExt;
 use tokio::stream::StreamExt;
 
@@ -11,25 +8,17 @@ use x11rb::connection::Connection;
 use x11rb::protocol::xproto::{AtomEnum, PropMode};
 use x11rb::wrapper::ConnectionExt;
 
-pub async fn create_server(
-    input_data: &mut InputData,
-    running: Arc<AtomicBool>,
-) -> Result<(), ServerSetup> {
+pub async fn create_server(input_data: &mut InputData) -> Result<(), ServerSetup> {
     let mut listener = tokio::net::UnixListener::bind(&input_data.socket_addr)
         .map_err(|_| ServerSetup::SocketConnection)?;
 
     output(input_data.cache.status(), input_data.output_format);
 
     while let Some(stream) = listener.next().await {
-        let should_listen = running.load(Ordering::SeqCst);
-        if !should_listen {
-            break;
-        }
         if let Err(e) = handle_stream(input_data, stream).await {
             eprintln!("{:?}", e);
         }
     }
-    fs::remove_file(&input_data.socket_addr).map_err(|_| ServerSetup::RemoveSocketFile)?;
     Ok(())
 }
 

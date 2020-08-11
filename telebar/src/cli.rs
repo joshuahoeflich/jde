@@ -81,11 +81,10 @@ pub fn get_input_data(
     config_path: Option<&str>,
     output_format: OutputFormat,
 ) -> CliResult {
-    let xdg_runtime = env::var("XDG_RUNTIME_DIR").map_err(|_| CliParseError::XdgRuntime)?;
     let home = env::var("HOME").map_err(|_| CliParseError::Home)?;
     let telebar_env_var = env::var("TELEBAR_ENV_VAR_FILE");
     Ok(InputData {
-        socket_addr: get_socket_addr(server_id, xdg_runtime),
+        socket_addr: get_socket_addr(server_id),
         cache: Cache::new(config_path, telebar_env_var, home)?,
         output_format,
     })
@@ -151,9 +150,9 @@ impl Cache {
     }
 }
 
-fn get_socket_addr(socket_addr: String, xdg_runtime: String) -> String {
+fn get_socket_addr(socket_addr: String) -> String {
     let mut socket_buffer = PathBuf::new();
-    socket_buffer.push(xdg_runtime);
+    socket_buffer.push("\0");
     socket_buffer.push(format!("{}_telebar_socket", socket_addr));
     socket_buffer.to_string_lossy().into_owned()
 }
@@ -233,10 +232,7 @@ mod tests {
 
     #[test]
     fn socket_addr() {
-        assert_eq!(
-            get_socket_addr("1".to_string(), "xdg_runtime".to_string()),
-            "xdg_runtime/1_telebar_socket"
-        );
+        assert_eq!(get_socket_addr("1".to_string()), "\0/1_telebar_socket");
     }
 
     #[test]
