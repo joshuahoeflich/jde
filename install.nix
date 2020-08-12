@@ -9,7 +9,6 @@ pkgs.buildEnv {
     (import ./emacs/emacs.nix { }).outPath
     (import ./gcloud/google-cloud.nix {}).outPath
     (import ./scripts/default.nix {}).outPath
-    (import ./telebar.nix {}).outPath
 
     # Binaries from the repos
     autocutsel
