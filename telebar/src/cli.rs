@@ -83,7 +83,7 @@ pub fn get_input_data(
     let home = env::var("HOME").map_err(|_| CliParseError::Home)?;
     let telebar_env_var = env::var("TELEBAR_ENV_VAR_FILE");
     Ok(InputData {
-        socket_addr: format!("\0{}_telebar_socket", server_id),
+        server_id,
         cache: Cache::new(config_path, telebar_env_var, home)?,
         output_format,
     })
@@ -96,7 +96,7 @@ pub enum OutputFormat {
 }
 
 pub struct InputData {
-    pub socket_addr: String,
+    pub server_id: String,
     pub cache: Cache,
     pub output_format: OutputFormat,
 }

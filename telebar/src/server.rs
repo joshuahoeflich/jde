@@ -9,7 +9,8 @@ use x11rb::protocol::xproto::{AtomEnum, PropMode};
 use x11rb::wrapper::ConnectionExt;
 
 pub async fn create_server(input_data: &mut InputData) -> Result<(), std::io::Error> {
-    let mut listener = tokio::net::UnixListener::bind(&input_data.socket_addr)?;
+    let mut listener =
+        tokio::net::UnixListener::bind(format!("\0{}_telebar_socket", input_data.server_id))?;
     output(input_data.cache.status(), input_data.output_format);
 
     while let Some(stream) = listener.next().await {
@@ -81,11 +82,13 @@ struct BarUpdate {
     value: String,
 }
 
-pub fn suggest_server_fix(_: std::io::Error) {
-    error_message(
-        "COULD NOT CONNECT TO SOCKET",
-        "Is another instance of telebar running? Please pass a unique id and try again.",
+pub fn suggest_server_fix(_: std::io::Error, server_id: String) {
+    let suggestion = format!(
+        "Is another instance of telebar-server running id \"{}\"? \
+Please pass telebar-server a unique id and try again.",
+        server_id
     );
+    error_message("COULD NOT CONNECT TO SOCKET", &suggestion);
 }
 
 fn xsetroot(status: String) {
