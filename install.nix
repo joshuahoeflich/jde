@@ -5,7 +5,7 @@ pkgs.buildEnv {
   extraOutputsToInstall = [ "out" "bin" "lib" ];
   paths = with pkgs; [
     # Custom-nix packages
-    (import ./window-manager/default.nix { }).outPath
+    (import ./dwm/default.nix { }).outPath
     (import ./emacs/emacs.nix { }).outPath
     (import ./gcloud/google-cloud.nix {}).outPath
     (import ./scripts/default.nix {}).outPath
