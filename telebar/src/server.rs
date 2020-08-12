@@ -84,7 +84,7 @@ struct BarUpdate {
 pub fn suggest_server_fix(_: std::io::Error) {
     error_message(
         "COULD NOT CONNECT TO SOCKET",
-        "Please make sure you passed a unique id to telebar_server and try again.",
+        "Is another instance of telebar running? Please pass a unique id and try again.",
     );
 }
 
