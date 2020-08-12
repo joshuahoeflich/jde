@@ -27,6 +27,7 @@ pkgs.buildEnv {
     htop
     kitty
     lf
+    loccount
     lorri
     neofetch
     neovim
