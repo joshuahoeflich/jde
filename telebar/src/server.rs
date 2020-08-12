@@ -11,8 +11,6 @@ use x11rb::wrapper::ConnectionExt;
 pub async fn create_server(input_data: &mut InputData) -> Result<(), std::io::Error> {
     let mut listener =
         tokio::net::UnixListener::bind(format!("\0{}_telebar_socket", input_data.server_id))?;
-    output(input_data.cache.status(), input_data.output_format);
-
     while let Some(stream) = listener.next().await {
         if let Err(e) = handle_stream(input_data, stream).await {
             eprintln!("{:?}", e);
@@ -54,6 +52,17 @@ fn get_bar_update(buffer_string: &str) -> BarUpdate {
         }
     }
     update
+}
+
+#[test]
+fn update_is_correct() {
+    let expected_update = BarUpdate {
+        key: "potato".to_string(),
+        value: "potato_update".to_string(),
+    };
+    let actual_update = get_bar_update("potato\npotato_update");
+    assert_eq!(expected_update.key, actual_update.key);
+    assert_eq!(expected_update.value, actual_update.value);
 }
 
 #[derive(Debug)]
