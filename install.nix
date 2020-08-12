@@ -9,6 +9,7 @@ pkgs.buildEnv {
     (import ./emacs/emacs.nix { }).outPath
     (import ./gcloud/google-cloud.nix {}).outPath
     (import ./scripts/default.nix {}).outPath
+    (import ./telebar/default.nix {}).outPath
 
     # Binaries from the repos
     autocutsel
@@ -22,7 +23,6 @@ pkgs.buildEnv {
     feh
     gcc
     git
-    go
     google-chrome
     htop
     kitty
@@ -43,7 +43,6 @@ pkgs.buildEnv {
     ranger
     ripgrep
     rnix-lsp
-    rustup
     spotify
     stack
     terraform-lsp

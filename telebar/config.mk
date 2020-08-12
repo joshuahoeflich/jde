@@ -1,3 +1,4 @@
+export PREFIX=/usr/local
 export TELEBAR_RELEASE_BUILD_DIR=${PWD}/build
 
 export TELEBAR_EXAMPLE_CONFIG_FILE=${PWD}/examples/Config.toml

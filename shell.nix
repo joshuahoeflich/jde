@@ -2,6 +2,7 @@
 
 pkgs.mkShell {
   buildInputs = with pkgs; [
+    rustup
     shellcheck
     pre-commit
     socat

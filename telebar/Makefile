@@ -2,11 +2,15 @@ include config.mk
 
 .DEFAULT_TARGET := build/release/main
 build/release/main: ## Create the production binary
-	@ cargo build --release --target-dir ${TELEBAR_RELEASE_BUILD_DIR}
+	@ cargo --verbose build --release --target-dir ${TELEBAR_RELEASE_BUILD_DIR}
 
 .PHONY: install
 install: build/release/main ## Install the production binary onto this system
-	@ echo "WRITE ME"
+	@ cp ${PWD}/build/release/main ${PREFIX}/bin/telebar_server
+
+.PHONY: uninstall
+uninstall:
+	@  rm -rf ${PREFIX}/bin/telebar_server
 
 .PHONY: help
 help: ## Display this help message
