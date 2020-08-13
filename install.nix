@@ -24,6 +24,7 @@ pkgs.buildEnv {
     git
     google-chrome
     htop
+    i3blocks
     kitty
     lf
     loccount
@@ -42,6 +43,7 @@ pkgs.buildEnv {
     ranger
     ripgrep
     rnix-lsp
+    # socat
     spotify
     stack
     terraform-lsp
