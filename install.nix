@@ -43,7 +43,7 @@ pkgs.buildEnv {
     ranger
     ripgrep
     rnix-lsp
-    # socat
+    socat
     spotify
     stack
     terraform-lsp
