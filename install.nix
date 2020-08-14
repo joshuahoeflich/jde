@@ -29,6 +29,7 @@ pkgs.buildEnv {
     kitty
     lf
     lorri
+    ncdu
     neofetch
     neovim
     nerdfonts
@@ -40,20 +41,20 @@ pkgs.buildEnv {
     picom
     python38Full
     pywal
+    racket
     ranger
     ripgrep
     rnix-lsp
     socat
     spotify
     stack
+    steam
     terraform-lsp
     tokei
     unzip
     watchexec
     xclip
     xlockmore
-    xmobar
-    xmonad-with-packages
     zsh
   ];
 }
