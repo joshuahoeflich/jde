@@ -17,6 +17,7 @@ pkgs.buildEnv {
     dash
     deepin.deepin-screenshot
     direnv
+    discord
     dmenu
     exa
     feh
@@ -27,7 +28,6 @@ pkgs.buildEnv {
     i3blocks
     kitty
     lf
-    loccount
     lorri
     neofetch
     neovim
@@ -47,6 +47,7 @@ pkgs.buildEnv {
     spotify
     stack
     terraform-lsp
+    tokei
     unzip
     watchexec
     xclip
