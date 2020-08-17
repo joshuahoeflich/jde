@@ -14,6 +14,7 @@ pkgs.buildEnv {
     autocutsel
     bat
     bitwarden
+    brightnessctl
     dash
     deepin.deepin-screenshot
     direnv
