@@ -57,6 +57,7 @@ pkgs.buildEnv {
     watchexec
     xclip
     xlockmore
+    xorg.xev
     zsh
   ];
 }
