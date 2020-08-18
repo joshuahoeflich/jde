@@ -5,5 +5,5 @@ pkgs.rustPlatform.buildRustPackage {
   src = pkgs.nix-gitignore.gitignoreSource [ ] ./.;
   nativeBuildInputs =
     [ pkgs.libpulseaudio pkgs.dbus pkgs.pkg-config pkgs.autoPatchelfHook ];
-  cargoSha256 = "13p6j01kh2qb41p1c6l9d48ghmwzlfp8zm9hlkq1wjj4zkja0x2i";
+  cargoSha256 = "0vphnms5bpxcracwmp8dw3rymd2kpqfp6834pbs92iq2d6cv4rv7";
 }
