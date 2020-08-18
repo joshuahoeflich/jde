@@ -15,22 +15,22 @@ enum BrightnessFailure {
 fn render_brightness_error(err: BrightnessFailure) {
     match err {
         BrightnessFailure::BadFile => eprintln!("Could not find required file"),
-        BrightnessFailure::BadNumber => eprintln!("Could not get uint out of file"),
+        BrightnessFailure::BadNumber => eprintln!("Could not get float out of file"),
     }
 }
 
-fn uint_from_filestring(
+fn float_from_filestring(
     maybe_brightness: Result<String, std::io::Error>,
-) -> Result<u32, BrightnessFailure> {
+) -> Result<f32, BrightnessFailure> {
     let brightness = maybe_brightness.map_err(|_| BrightnessFailure::BadFile)?;
     remove_whitespace(brightness)
-        .parse::<u32>()
+        .parse::<f32>()
         .map_err(|_| BrightnessFailure::BadNumber)
 }
 
 #[test]
 fn test_io_err() {
-    match uint_from_filestring(Err(std::io::Error::new(
+    match float_from_filestring(Err(std::io::Error::new(
         std::io::ErrorKind::InvalidData,
         "bad",
     ))) {
@@ -41,7 +41,7 @@ fn test_io_err() {
 
 #[test]
 fn test_parse_error() {
-    match uint_from_filestring(Ok("no\nnumber\nhere".to_string())) {
+    match float_from_filestring(Ok("no\nnumber\nhere".to_string())) {
         Err(BrightnessFailure::BadNumber) => (),
         _ => unreachable!(),
     }
@@ -49,11 +49,11 @@ fn test_parse_error() {
 
 #[test]
 fn test_good_file() {
-    assert_eq!(32, uint_from_filestring(Ok("32\n".to_string())).unwrap())
+    assert_eq!(32.0, float_from_filestring(Ok("32\n".to_string())).unwrap())
 }
 
-fn get_brightness_string(brightness: u32, max_brightness: u32) -> String {
-    format!("  {}%", (brightness / max_brightness) * 100)
+fn get_brightness_string(brightness: f32, max_brightness: f32) -> String {
+    format!("  {:.2}%", (brightness / max_brightness) * 100.0)
 }
 
 async fn get_brightness() -> Result<String, BrightnessFailure> {
@@ -65,8 +65,8 @@ async fn get_brightness() -> Result<String, BrightnessFailure> {
             "/sys/class/backlight/intel_backlight/max_brightness"
         ))
     );
-    let brightness = uint_from_filestring(brightness)?;
-    let max_brightness = uint_from_filestring(max_brightness)?;
+    let brightness = float_from_filestring(brightness)?;
+    let max_brightness = float_from_filestring(max_brightness)?;
     Ok(get_brightness_string(brightness, max_brightness))
 }
 
