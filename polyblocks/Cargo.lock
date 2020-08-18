@@ -99,8 +99,21 @@ version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5cd9e78c210146a1860f897db03412fd5091fd73100778e43ee255cca252cf32"
 dependencies = [
+ "futures",
  "libc",
  "libdbus-sys",
+]
+
+[[package]]
+name = "dbus-tokio"
+version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "baaf99ea9b8296ba0db293cad28c51d788e690c47ebe9974b864354b258a636a"
+dependencies = [
+ "dbus",
+ "libc",
+ "mio",
+ "tokio",
 ]
 
 [[package]]
@@ -418,6 +431,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "num_cpus"
+version = "1.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "05499f3756671c15885fee9034446956fff3f243d6077b91e5767df161f766b3"
+dependencies = [
+ "hermit-abi",
+ "libc",
+]
+
+[[package]]
 name = "once_cell"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -488,6 +511,7 @@ dependencies = [
  "chrono",
  "clap",
  "dbus",
+ "dbus-tokio",
  "polylib",
  "rust-pulsectl",
  "tokio",
@@ -623,6 +647,7 @@ dependencies = [
  "mio",
  "mio-named-pipes",
  "mio-uds",
+ "num_cpus",
  "pin-project-lite",
  "signal-hook-registry",
  "slab",

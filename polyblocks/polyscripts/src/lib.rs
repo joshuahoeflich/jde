@@ -53,11 +53,13 @@ pub fn get_app_context(app_name: &str, about: &str) -> AppContext {
         .value_of("block")
         .expect("Output is required")
         .to_owned();
-    let command = matches.value_of("command").map(|command| command.to_owned());
+    let command = matches
+        .value_of("command")
+        .map(|command| command.to_owned());
     AppContext {
         socket_addr: get_socket_addr(id),
         block,
-        command
+        command,
     }
 }
 

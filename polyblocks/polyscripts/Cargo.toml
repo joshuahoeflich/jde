@@ -11,3 +11,4 @@ rust-pulsectl = "0.2.6"
 polylib = { path = "../polylib" }
 chrono = "0.4.15"
 dbus = "0.8.4"
+dbus-tokio = "0.5.2"

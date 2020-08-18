@@ -1,19 +1,21 @@
 extern crate tokio;
 
+use dbus::nonblock;
+use dbus_tokio::connection;
 use polylib::{render_pbwrite_error, write_polyblocks};
 use polyscripts::{get_app_context, remove_whitespace};
 use std::path::PathBuf;
 use std::process;
 use tokio::fs::read_to_string;
 
-const CUR_BRIGHTNESS_PATH: &'static str = "/sys/class/backlight/intel_backlight/brightness";
-const MAX_BRIGHTNESS_PATH: &'static str = "/sys/class/backlight/intel_backlight/max_brightness";
+const CUR_BRIGHTNESS_PATH: &str = "/sys/class/backlight/intel_backlight/brightness";
+const MAX_BRIGHTNESS_PATH: &str = "/sys/class/backlight/intel_backlight/max_brightness";
 
 #[derive(Debug)]
 enum BrightnessFailure {
     BadFile,
     BadNumber,
-    BadWrite,
+    Dbus,
 }
 
 enum BrightnessCommand {
@@ -28,7 +30,6 @@ struct SystemBrightness {
 }
 
 impl ToString for SystemBrightness {
-    #[inline]
     fn to_string(&self) -> String {
         format!(
             "  {:.0}%",
@@ -41,7 +42,7 @@ fn render_brightness_error(err: BrightnessFailure) {
     match err {
         BrightnessFailure::BadFile => eprintln!("Could not find required file"),
         BrightnessFailure::BadNumber => eprintln!("Could not get float out of file"),
-        BrightnessFailure::BadWrite => eprintln!("Could not update brightness"),
+        BrightnessFailure::Dbus => eprintln!("Problem interacting with DBus"),
     }
 }
 
@@ -79,12 +80,29 @@ fn get_brightness_command(maybe_command: Option<String>) -> BrightnessCommand {
 }
 
 async fn update_brightness(new_brightness: f32) -> Result<(), BrightnessFailure> {
-    let brightness_string = format!("{}\n", new_brightness.floor());
-    tokio::fs::write(CUR_BRIGHTNESS_PATH, &brightness_string)
+    let dbus_brightness = new_brightness.floor() as u32;
+    let (resource, connection) =
+        connection::new_system_sync().map_err(|_| BrightnessFailure::Dbus)?;
+    tokio::spawn(async {
+        resource.await;
+        unreachable!()
+    });
+    let proxy = nonblock::Proxy::new(
+        "org.freedesktop.login1",
+        "/org/freedesktop/login1/session/auto",
+        std::time::Duration::from_secs(1),
+        connection,
+    );
+    proxy
+        .method_call(
+            "org.freedesktop.login1.Session",
+            "SetBrightness",
+            ("backlight", "intel_backlight", dbus_brightness),
+        )
         .await
         .map_err(|e| {
-            eprintln!("{}", e);
-            BrightnessFailure::BadWrite
+            eprintln!("ERR WAS {}", e);
+            BrightnessFailure::Dbus
         })?;
     Ok(())
 }
@@ -103,21 +121,15 @@ async fn change_brightness(
     let bright_ref = &mut brightness;
     match brightness_command {
         BrightnessCommand::Increase => {
-            if bright_ref.cur_brightness >= bright_ref.max_brightness {
-                ()
-            } else {
+            if bright_ref.cur_brightness < bright_ref.max_brightness {
                 bright_ref.cur_brightness =
                     min(bright_ref.cur_brightness * 1.10, bright_ref.max_brightness);
                 update_brightness(bright_ref.cur_brightness).await?;
             }
         }
         BrightnessCommand::Decrease => {
-            if bright_ref.cur_brightness <= 0.0 {
-                ()
-            } else {
-                bright_ref.cur_brightness = bright_ref.cur_brightness * 0.9;
-                update_brightness(bright_ref.cur_brightness).await?;
-            }
+            bright_ref.cur_brightness *= 0.9;
+            update_brightness(bright_ref.cur_brightness).await?;
         }
         _ => (),
     };

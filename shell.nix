@@ -6,7 +6,9 @@ pkgs.mkShell {
     shellcheck
     pre-commit
     libpulseaudio
-    dbus_libs
+    dbus
+    clippy
+    pkg-config
   ];
   shellHook = ''
     if [ -d "$PWD"/.git ] && [ ! -f "$PWD"/.git/hooks/pre-commit ]; then
