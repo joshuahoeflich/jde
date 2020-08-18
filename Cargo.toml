@@ -1,6 +1,0 @@
-[workspace]
-members = [
-"polyblocks/polyblocks",
-"polyblocks/polylib",
-"polyblocks/polyscripts",
-]
