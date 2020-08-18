@@ -59,7 +59,7 @@ fn get_percentage(volume_string: String) -> Result<String, PulseError> {
 
 fn get_main_device(handler: &mut SinkController) -> Result<DeviceInfo, PulseError> {
     handler
-        .get_device_by_index(0)
+        .get_default_device()
         .map_err(|_| PulseError::MainDevice)
 }
 
