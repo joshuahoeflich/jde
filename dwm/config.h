@@ -70,8 +70,8 @@ static const char *themecmd[] = { "ith", NULL };
 static const char *volmutecmd[] = { "volume", "--block", "02-volume", "--command", "mute", NULL };
 static const char *volinccmd[] = { "volume", "--block", "02-volume", "--command", "increase", NULL };
 static const char *voldeccmd[] = { "volume", "--block", "02-volume", "--command", "decrease", NULL };
-static const char *scrinccmd[] = { "/bin/sh", "-c", "brightnessctl s 10%+ && brightness --block 00-brightness", NULL };
-static const char *scrdeccmd[] = { "/bin/sh", "-c", "brightnessctl s 10%- && brightness --block 00-brightness", NULL };
+static const char *scrinccmd[] = { "brightness", "--block", "00-brightness", "--command", "increase", NULL };
+static const char *scrdeccmd[] = { "brightness", "--block", "00-brightness", "--command", "decrease", NULL };
 
 static Key keys[] = {
 	/* modifier                     key                   function        argument */
