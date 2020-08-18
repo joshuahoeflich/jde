@@ -66,9 +66,7 @@ fn toggle_mute(handler: &mut SinkController, main_device: DeviceInfo) -> Result<
     let operation = handler.handler.introspect.set_sink_mute_by_index(
         main_device.index,
         !main_device.mute,
-        Some(Box::new(|_| {
-            println!("I RAN");
-        })),
+        Some(Box::new(|_| {})),
     );
     handler
         .handler

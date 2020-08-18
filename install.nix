@@ -31,6 +31,7 @@ pkgs.buildEnv {
     kitty
     lf
     lorri
+    gnome3.nautilus
     ncdu
     neofetch
     neovim
