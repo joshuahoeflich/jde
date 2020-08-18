@@ -1,0 +1,9 @@
+[package]
+name = "polylib"
+version = "0.1.0"
+authors = ["Joshua Hoeflich <josh@joshuahoeflich.com>"]
+edition = "2018"
+
+[dependencies]
+clap  = "2.33"
+tokio = { version = "0.2", features = ["macros", "net", "stream", "uds", "io-util"] }

@@ -1,0 +1,12 @@
+[package]
+name = "polyscripts"
+version = "0.1.0"
+authors = ["Joshua Hoeflich <josh@joshuahoeflich.com>"]
+edition = "2018"
+
+[dependencies]
+tokio = { version = "0.2", features = ["macros", "fs"] }
+clap = "2.33"
+rust-pulsectl = "0.2.6"
+polylib = { path = "../polylib" }
+chrono = "0.4.15"

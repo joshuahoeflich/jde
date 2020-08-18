@@ -1,0 +1,17 @@
+# This is an example file designed to help you configure Polyblocks. It's
+# also used in several of the tests, so bear in mind those might fail
+# should you touch this file.
+
+# Each block of your status bar should look like this:
+[weather]
+script="echo hi"
+interval=30 # Seconds
+
+[battery]
+script="cat /sys/class/power_supply/BAT0/capacity"
+interval=0 # Runs once and then never again
+
+# The `global` block is special. You use it to define the separators between
+# the other blocks.
+[global]
+separator=" | "
