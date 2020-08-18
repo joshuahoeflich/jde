@@ -10,7 +10,7 @@ async fn main() {
         "polytime",
         "Print out nice time information on the status bar.",
     );
-    let output = chrono::DateTime::now().format("%-l:%M %p ").to_string();
+    let output = chrono::Local::now().format("%-l:%M %p ").to_string();
     match write_polyblocks(&context.socket_addr, &context.block, &output).await {
         Ok(()) => process::exit(0),
         Err(e) => {
