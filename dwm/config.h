@@ -72,6 +72,7 @@ static const char *volinccmd[] = { "volume", "--block", "02-volume", "--command"
 static const char *voldeccmd[] = { "volume", "--block", "02-volume", "--command", "decrease", NULL };
 static const char *scrinccmd[] = { "brightness", "--block", "00-brightness", "--command", "increase", NULL };
 static const char *scrdeccmd[] = { "brightness", "--block", "00-brightness", "--command", "decrease", NULL };
+static const char *wallpapercmd[] = { "wallpaper", NULL };
 
 static Key keys[] = {
 	/* modifier                     key                   function        argument */
@@ -81,6 +82,7 @@ static Key keys[] = {
 	{ MODKEY,                       XK_g,                 spawn,          {.v = browsercmd } },
 	{ MODKEY,                       XK_e,                 spawn,          {.v = editorcmd } },
 	{ MODKEY,                       XK_i,                 spawn,          {.v = themecmd } },
+	{ MODKEY,                       XK_n,                 spawn,          {.v = wallpapercmd } },
 
 	{ False,                        IncreaseBrightness,   spawn,          {.v = scrinccmd } },
 	{ False,                        DecreaseBrightness,   spawn,          {.v = scrdeccmd } },
