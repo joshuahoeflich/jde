@@ -1,6 +1,5 @@
 #!/bin/sh
 VERSION=1.0.0
-WALLPAPER_PATH="$HOME/pictures/wallpaper/*"
 
 usage()
 {
@@ -8,7 +7,7 @@ cat <<EOF
 WALLPAPER
 
 USAGE
-wallpaper                 Set a new, completely random wallpaper.
+wallpaper          Set a new, completely random wallpaper.
 
 FLAGS
 --help, -h:        Display this help message and exit.
@@ -31,4 +30,4 @@ case "$1" in
         ;;
 esac
 
-feh --bg-fill --randomize "$WALLPAPER_PATH"
+feh --bg-fill --randomize "$HOME"/pictures/wallpaper/*
