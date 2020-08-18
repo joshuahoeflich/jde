@@ -1,9 +1,8 @@
 extern crate pulsectl;
 extern crate tokio;
 
-use clap::{App, Arg};
 use polylib::{render_pbwrite_error, write_polyblocks};
-use polyscripts::get_socket_addr;
+use polyscripts::get_app_context;
 use pulsectl::controllers::types::DeviceInfo;
 use pulsectl::controllers::DeviceControl;
 use pulsectl::controllers::SinkController;
@@ -99,47 +98,8 @@ fn get_volume(volume_command: VolumeCommand) -> Result<Volume, PulseError> {
     Ok(vol)
 }
 
-struct VolumeContext {
-    command: VolumeCommand,
-    block: String,
-    socket_addr: String,
-}
-
-fn get_volume_context() -> VolumeContext {
-    let matches = App::new("volume")
-        .name("volume")
-        .version("1.0")
-        .author("Joshua Hoeflich")
-        .about("Update the volume and my status bar together.")
-        .arg(
-            Arg::with_name("id")
-                .short("i")
-                .long("id")
-                .takes_value(true)
-                .help("ID of the server to which you would like to connect. Defaults to 0."),
-        )
-        .arg(
-            Arg::with_name("block")
-                .short("b")
-                .long("block")
-                .required(true)
-                .takes_value(true)
-                .help("Block which you would like this command to update"),
-        )
-        .arg(
-            Arg::with_name("command")
-                .short("c")
-                .long("command")
-                .takes_value(true)
-                .help("How you would like to modify the volume."),
-        )
-        .get_matches();
-    let socket_addr = get_socket_addr(matches.value_of("id").unwrap_or("0"));
-    let block = matches
-        .value_of("block")
-        .expect("Output is required")
-        .to_owned();
-    let command = match matches.value_of("command") {
+fn get_vol_command(option: Option<String>) -> VolumeCommand {
+    match option.as_ref().map(String::as_ref) {
         Some(command_type) => match command_type {
             "increase" => VolumeCommand::Increase,
             "decrease" => VolumeCommand::Decrease,
@@ -147,18 +107,16 @@ fn get_volume_context() -> VolumeContext {
             _ => VolumeCommand::None,
         },
         None => VolumeCommand::None,
-    };
-    VolumeContext {
-        socket_addr,
-        block,
-        command,
     }
 }
 
 #[tokio::main]
 async fn main() {
-    let context = get_volume_context();
-    let vol = get_volume(context.command).unwrap_or_else(|err| {
+    let context = get_app_context(
+        "Volume",
+        "Set the volume of my computer and update the status bar.",
+    );
+    let vol = get_volume(get_vol_command(context.command)).unwrap_or_else(|err| {
         render_pulse_error(err);
         process::exit(1);
     });

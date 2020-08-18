@@ -16,9 +16,10 @@ fn whitespace_test() {
 pub struct AppContext {
     pub socket_addr: String,
     pub block: String,
+    pub command: Option<String>,
 }
 
-pub fn get_app_context<'a>(app_name: &'a str, about: &'a str) -> AppContext {
+pub fn get_app_context(app_name: &str, about: &str) -> AppContext {
     let matches = App::new(app_name)
         .name(app_name)
         .version("1.0")
@@ -30,6 +31,13 @@ pub fn get_app_context<'a>(app_name: &'a str, about: &'a str) -> AppContext {
                 .long("id")
                 .takes_value(true)
                 .help("ID of the server to which you would like to connect. Defaults to 0."),
+        )
+        .arg(
+            Arg::with_name("command")
+                .short("c")
+                .long("command")
+                .takes_value(true)
+                .help("Command which you would like to pass to this program."),
         )
         .arg(
             Arg::with_name("block")
@@ -45,9 +53,11 @@ pub fn get_app_context<'a>(app_name: &'a str, about: &'a str) -> AppContext {
         .value_of("block")
         .expect("Output is required")
         .to_owned();
+    let command = matches.value_of("command").map(|command| command.to_owned());
     AppContext {
         socket_addr: get_socket_addr(id),
         block,
+        command
     }
 }
 

@@ -53,10 +53,34 @@ fn test_good_file() {
 }
 
 fn get_brightness_string(brightness: f32, max_brightness: f32) -> String {
-    format!("  {:.2}%", (brightness / max_brightness) * 100.0)
+    format!("  {:.0}%", (brightness / max_brightness) * 100.0)
 }
 
-async fn get_brightness() -> Result<String, BrightnessFailure> {
+enum BrightnessCommand {
+    Increase,
+    Decrease,
+    None,
+}
+
+fn get_brightness_command(maybe_command: Option<String>) -> BrightnessCommand {
+    match maybe_command.as_ref().map(String::as_ref) {
+        Some(command_type) => match command_type {
+            "increase" => BrightnessCommand::Increase,
+            "decrease" => BrightnessCommand::Decrease,
+            _ => BrightnessCommand::None,
+        },
+        None => BrightnessCommand::None,
+    }
+}
+
+async fn change_brightness(brightness_command: BrightnessCommand) -> Result<(), BrightnessFailure> {
+    Ok(());
+}
+
+async fn get_brightness(
+    brightness_command: BrightnessCommand,
+) -> Result<String, BrightnessFailure> {
+    change_brightness(brightness_command).await?;
     let (brightness, max_brightness) = tokio::join!(
         read_to_string(PathBuf::from(
             "/sys/class/backlight/intel_backlight/brightness"
@@ -76,10 +100,12 @@ async fn main() {
         "brightness",
         "Display brightness information about my screen on my status bar.",
     );
-    let output = get_brightness().await.unwrap_or_else(|err| {
-        render_brightness_error(err);
-        process::exit(1);
-    });
+    let output = get_brightness(get_brightness_command(context.command))
+        .await
+        .unwrap_or_else(|err| {
+            render_brightness_error(err);
+            process::exit(1);
+        });
     match write_polyblocks(&context.socket_addr, &context.block, &output).await {
         Ok(()) => process::exit(0),
         Err(e) => {
