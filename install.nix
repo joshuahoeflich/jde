@@ -25,13 +25,14 @@ pkgs.buildEnv {
     feh
     gcc
     git
+    gnome3.nautilus
     google-chrome
+    gvfs
     htop
     i3blocks
     kitty
     lf
     lorri
-    gnome3.nautilus
     ncdu
     neofetch
     neovim
