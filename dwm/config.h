@@ -66,7 +66,7 @@ static const char *browsercmd[] = { "google-chrome-stable", NULL };
 static const char *bitwardencmd[] = { "bitwarden", NULL };
 static const char *editorcmd[] = { "emacs", NULL };
 static const char *themecmd[] = { "ith", NULL };
-static const char *logoutcmd[] = { "logout", NULL };
+static const char *logmeoutcmd[] = { "logmeout", NULL };
 
 static const char *volmutecmd[] = { "volume", "--block", "02-volume", "--command", "mute", NULL };
 static const char *volinccmd[] = { "volume", "--block", "02-volume", "--command", "increase", NULL };
@@ -84,7 +84,7 @@ static Key keys[] = {
 	{ MODKEY,                       XK_e,                 spawn,          {.v = editorcmd } },
 	{ MODKEY,                       XK_i,                 spawn,          {.v = themecmd } },
 	{ MODKEY,                       XK_n,                 spawn,          {.v = wallpapercmd } },
-	{ MODKEY|ShiftMask,             XK_q,                 spawn,          {.v = logoutcmd } },
+	{ MODKEY|ShiftMask,             XK_q,                 spawn,          {.v = logmeoutcmd } },
 
 	{ False,                        IncreaseBrightness,   spawn,          {.v = scrinccmd } },
 	{ False,                        DecreaseBrightness,   spawn,          {.v = scrdeccmd } },
