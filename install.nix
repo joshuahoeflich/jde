@@ -38,6 +38,7 @@ pkgs.buildEnv {
     neovim
     nerdfonts
     nix
+    nix-direnv
     nixfmt
     nodejs-12_x
     pamixer
