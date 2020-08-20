@@ -32,7 +32,6 @@ pkgs.buildEnv {
     i3blocks
     kitty
     lf
-    lorri
     ncdu
     neofetch
     neovim
