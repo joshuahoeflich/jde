@@ -40,6 +40,8 @@ pkgs.buildEnv {
     nix
     nixfmt
     nodejs-12_x
+    ocaml
+    opam
     pamixer
     pavucontrol
     picom
