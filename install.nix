@@ -25,6 +25,7 @@ pkgs.buildEnv {
     feh
     gcc
     git
+    gitAndTools.hub
     gnome3.nautilus
     google-chrome
     gvfs
