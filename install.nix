@@ -61,6 +61,7 @@ pkgs.buildEnv {
     xclip
     xlockmore
     xorg.xev
+    zoom-us
     zsh
   ];
 }
