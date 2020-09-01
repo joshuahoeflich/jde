@@ -14,6 +14,7 @@ pkgs.buildEnv {
     # Binaries from the repos
     autocutsel
     bat
+    bind
     bitwarden
     brightnessctl
     dash
@@ -24,6 +25,7 @@ pkgs.buildEnv {
     exa
     feh
     gcc
+    gimp
     git
     gitAndTools.hub
     gnome3.nautilus
