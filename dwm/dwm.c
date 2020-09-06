@@ -232,6 +232,8 @@ static void setlayout(const Arg *arg);
 static void setmfact(const Arg *arg);
 static void setup(void);
 static void seturgent(Client *c, int urg);
+static void shift(const Arg *arg, Arg *shifted);
+static void shifttag(const Arg *arg);
 static void shiftview(const Arg *arg);
 static void show(Client *c);
 static void showhide(Client *c);
@@ -1826,17 +1828,30 @@ seturgent(Client *c, int urg)
 }
 
 void
-shiftview(const Arg *arg) {
-	Arg shifted;
-
+shift(const Arg *arg, Arg *shifted)
+{
 	if(arg->i > 0) // left circular shift
-		shifted.ui = (selmon->tagset[selmon->seltags] << arg->i)
+		shifted->ui = (selmon->tagset[selmon->seltags] << arg->i)
 		   | (selmon->tagset[selmon->seltags] >> (LENGTH(tags) - arg->i));
 
 	else // right circular shift
-		shifted.ui = selmon->tagset[selmon->seltags] >> (- arg->i)
+		shifted->ui = selmon->tagset[selmon->seltags] >> (- arg->i)
 		   | selmon->tagset[selmon->seltags] << (LENGTH(tags) + arg->i);
 
+}
+
+void
+shifttag(const Arg *arg)
+{
+	Arg shifted;
+	shift(arg, &shifted);
+	tag(&shifted);
+}
+
+void
+shiftview(const Arg *arg) {
+	Arg shifted;
+	shift(arg, &shifted);
 	view(&shifted);
 }
 

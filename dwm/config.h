@@ -46,12 +46,6 @@ static const Layout layouts[] = {
 
 /* key definitions */
 #define MODKEY Mod4Mask
-#define TAGKEYS(KEY,TAG) \
-	{ MODKEY,                       KEY,      view,           {.ui = 1 << TAG} }, \
-	{ MODKEY|ControlMask,           KEY,      toggleview,     {.ui = 1 << TAG} }, \
-	{ MODKEY|ShiftMask,             KEY,      tag,            {.ui = 1 << TAG} }, \
-	{ MODKEY|ControlMask|ShiftMask, KEY,      toggletag,      {.ui = 1 << TAG} },
-
 #define XF86AudioMute		      0x1008ff12
 #define XF86AudioLowerVolume	0x1008ff11
 #define XF86AudioRaiseVolume	0x1008ff13
@@ -118,16 +112,7 @@ static Key keys[] = {
 	{ MODKEY,                       XK_u,                 focusmon,       {.i = +1 } },
 	{ MODKEY,                       XK_y,                 shiftview,      {.i = +1 } },
 	{ MODKEY|ShiftMask,             XK_u,                 tagmon,         {.i = +1 } },
-	{ MODKEY|ShiftMask,             XK_y,                 shiftview,      {.i = -1 } },
-	TAGKEYS(                        XK_1,                                 0)
-	TAGKEYS(                        XK_2,                                 1)
-	TAGKEYS(                        XK_3,                                 2)
-	TAGKEYS(                        XK_4,                                 3)
-	TAGKEYS(                        XK_5,                                 4)
-	TAGKEYS(                        XK_6,                                 5)
-	TAGKEYS(                        XK_7,                                 6)
-	TAGKEYS(                        XK_8,                                 7)
-	TAGKEYS(                        XK_9,                                 8)
+	{ MODKEY|ShiftMask,             XK_y,                 shifttag,       {.i = +1 } },
 };
 
 /* button definitions */
