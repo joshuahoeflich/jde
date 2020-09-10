@@ -5,11 +5,12 @@ pkgs.buildEnv {
   extraOutputsToInstall = [ "out" "bin" "lib" ];
   paths = with pkgs; [
     # Custom-nix packages
-    (import ./dwm/default.nix { }).outPath
-    (import ./emacs/emacs.nix { }).outPath
+    (import ./dwm/default.nix {}).outPath
+    (import ./emacs/emacs.nix {}).outPath
     (import ./gcloud/google-cloud.nix {}).outPath
     (import ./scripts/default.nix {}).outPath
     (import ./polyblocks/default.nix {}).outPath
+    (import ./discord.nix {})
 
     # Binaries from the repos
     autocutsel
@@ -20,7 +21,7 @@ pkgs.buildEnv {
     dash
     deepin.deepin-screenshot
     direnv
-    discord
+    # discord_12
     dmenu
     exa
     feh
