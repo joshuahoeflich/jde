@@ -18,13 +18,14 @@ pkgs.buildEnv {
     bind
     bitwarden
     brightnessctl
+    bzip2
     dash
     deepin.deepin-screenshot
     direnv
-    # discord_12
     dmenu
     exa
     feh
+    firefox
     gcc
     gimp
     git
@@ -34,8 +35,10 @@ pkgs.buildEnv {
     gvfs
     htop
     i3blocks
+    kdenlive
     kitty
     lf
+    mpv
     ncdu
     neofetch
     neovim
@@ -44,15 +47,16 @@ pkgs.buildEnv {
     nix-direnv
     nixfmt
     nodejs-12_x
+    okular
     pamixer
     pavucontrol
     picom
     python38Full
     pywal
-    racket
     ranger
     ripgrep
     rnix-lsp
+    simplescreenrecorder
     socat
     spotify
     stack
