@@ -39,6 +39,7 @@ pkgs.buildEnv {
     kitty
     lf
     mpv
+    mupdf
     ncdu
     neofetch
     neovim
