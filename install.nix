@@ -48,6 +48,7 @@ pkgs.buildEnv {
     nix-direnv
     nixfmt
     nodejs-12_x
+    nodePackages.nodemon
     okular
     pamixer
     pavucontrol
