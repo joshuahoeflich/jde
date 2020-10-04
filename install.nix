@@ -31,7 +31,7 @@ pkgs.buildEnv {
     git
     gitAndTools.hub
     gnome3.nautilus
-    google-chrome
+    firefox
     gvfs
     htop
     i3blocks
