@@ -24,14 +24,15 @@ pkgs.buildEnv {
     direnv
     dmenu
     exa
+    exfat-utils
     feh
+    firefox
     firefox
     gcc
     gimp
     git
     gitAndTools.hub
     gnome3.nautilus
-    firefox
     gvfs
     htop
     i3blocks
@@ -47,8 +48,8 @@ pkgs.buildEnv {
     nix
     nix-direnv
     nixfmt
-    nodejs-12_x
     nodePackages.nodemon
+    nodejs-12_x
     okular
     pamixer
     pavucontrol
