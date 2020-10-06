@@ -24,7 +24,6 @@ pkgs.buildEnv {
     direnv
     dmenu
     exa
-    exfat-utils
     feh
     firefox
     firefox
