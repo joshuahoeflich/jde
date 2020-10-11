@@ -26,7 +26,6 @@ pkgs.buildEnv {
     exa
     feh
     firefox
-    firefox
     gcc
     gimp
     git
