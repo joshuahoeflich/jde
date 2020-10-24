@@ -33,7 +33,6 @@ pkgs.buildEnv {
     gnome3.nautilus
     gvfs
     htop
-    i3blocks
     kdenlive
     kitty
     lf
