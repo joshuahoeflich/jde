@@ -1,16 +1,21 @@
 { pkgs ? import <nixpkgs> { config = { allowUnfree = true; }; } }:
 
+let
+  unstable = import (fetchTarball https://nixos.org/channels/nixos-unstable/nixexprs.tar.xz) {};
+in
 pkgs.buildEnv {
   name = "user-env";
   extraOutputsToInstall = [ "out" "bin" "lib" ];
   paths = with pkgs; [
     # Custom-nix packages
     (import ./dwm/default.nix {}).outPath
-    (import ./emacs/emacs.nix {}).outPath
+    # (import ./emacs/emacs.nix {}).outPath
     (import ./gcloud/google-cloud.nix {}).outPath
     (import ./scripts/default.nix {}).outPath
     (import ./polyblocks/default.nix {}).outPath
     (import ./discord.nix {})
+    unstable.go
+    unstable.emacs
 
     # Binaries from the repos
     autocutsel
